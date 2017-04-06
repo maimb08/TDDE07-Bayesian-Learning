@@ -18,7 +18,7 @@ invchisq = dinvchisq(interval, n, tau_sq)
 
 # Plot draws against density
 hist(var, 500, border="gray", prob=TRUE)
-lines(interval, invchisq)
+lines(interval, invchisq, lwd=2)
 
 
 # 2.2
@@ -29,9 +29,4 @@ hist(G, 100)
 
 # 2.3
 
-get_mode = function(v) {
-  uniqv = unique(v)
-  uniqv[which.max(tabulate(match(v, uniqv)))]
-}
-mode = get_mode(G)
 

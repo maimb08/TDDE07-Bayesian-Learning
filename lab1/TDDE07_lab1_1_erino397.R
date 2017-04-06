@@ -2,12 +2,13 @@
 # Experiment Setup
 a = 2
 b = 2
+n = 20
 s = 14
-f = 6
+p = s / n
 
 # Posterior alpha and beta
-a_n = a + s
-b_n = b + f
+a_n = a + n * p
+b_n = b + n * (1 - p)
 
 # Theoretical mean and standard deviations
 mean = a_n / (a_n + b_n)
