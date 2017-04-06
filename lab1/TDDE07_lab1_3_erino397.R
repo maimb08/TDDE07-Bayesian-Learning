@@ -11,22 +11,24 @@ calc_prob = function(k_val, y_val){
 }
 
 calc_post = function(k_val){
-  prob = sapply(y, calc_prob, k_val=k_val)
-  post = prod(prob) * dexp(k_val)
+  probabilities = sapply(y, calc_prob, k_val=k_val)
+  prior = dexp(k_val)
+  posterior = prod(probabilities) * prior
   
-  return (post)
+  return (posterior)
 }
 
 posterior = sapply(k, calc_post)
 
-plot(k, posterior, type="l")
+plot(k, posterior, type="l", col="black")
 
 # 3.2
 
-#get_mode = function(v) {
-#  uniqv = unique(v)
-#  uniqv[which.max(tabulate(match(v, uniqv)))]
-#}
-#mode = get_mode(posterior)
+# Find the k value which maximizes posterior
+mode = k[which.max(posterior)]
 
-mode = max(posterior)
+# Plot vertical line where k maximizes posterior
+abline(v=mode, col="gray")
+
+# Legend for posterior and mode
+legend('topright', c('Posterior', 'Mode'), fill=c("black", "gray"), inset=0.02)
