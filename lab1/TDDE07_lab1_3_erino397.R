@@ -1,3 +1,6 @@
+grid_w = 6
+grid_h = 5
+
 # 3.1
 
 y = c(-2.44, 2.14, 2.54, 1.83, 2.02, 2.33, -2.79, 2.23, 2.07, 2.02)
@@ -20,7 +23,14 @@ calc_post = function(k_val){
 
 posterior = sapply(k, calc_post)
 
-plot(k, posterior, type="l", col="black")
+pdf("plots/3_posterior_mode.pdf", width=grid_w, height=grid_h)
+plot(k, 
+     posterior, type="l", 
+     col="black", 
+     lwd=2, 
+     xlab="Kappa", 
+     ylab="Posterior", 
+     main="3. Posterior density and mode")
 
 # 3.2
 
@@ -28,7 +38,11 @@ plot(k, posterior, type="l", col="black")
 mode = k[which.max(posterior)]
 
 # Plot vertical line where k maximizes posterior
-abline(v=mode, col="gray")
+abline(v=mode, col="gray", lwd=2)
 
 # Legend for posterior and mode
-legend('topright', c('Posterior', 'Mode'), fill=c("black", "gray"), inset=0.02)
+legend('topright', 
+       c('Posterior', 'Mode'), 
+       fill=c("black", "gray"), 
+       inset=0.02)
+dev.off()

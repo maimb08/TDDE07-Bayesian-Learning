@@ -1,3 +1,5 @@
+grid_w = 6
+grid_h = 5
 
 # Experiment Setup
 a = 2
@@ -29,27 +31,48 @@ data = sapply(2:10000, calc_mean_stddev)
 
 # Save plot for the convergence of mean and variation
 
-pdf("1_mean")
+pdf("plots/1_1_mean.pdf", width=grid_w, height=grid_h)
   mean_values = data[1,]
-  plot(mean_values, type="l", main = '1.1 Mean convergence')
+  plot(mean_values, 
+       type="l", 
+       col="gray", 
+       xlab="Iterations", 
+       ylab="Mean", 
+       main = '1.1 Mean convergence')
   abline(h=mean)
 dev.off()
 
-pdf("1_std_dev")
+pdf("plots/1_1_std_dev.pdf", width=grid_w, height=grid_h)
   standard_deviations = data[2,]
-  plot(standard_deviations, type="l", main = '1.1 Standard deviation convergence ')
+  plot(standard_deviations, 
+       type="l", 
+       col="gray", 
+       xlab="Iterations", 
+       ylab="Standard Deviation", 
+       main = '1.1 Standard deviation convergence ')
   abline(h=std_dev)
 dev.off()
 
 
 # 1.2
 
-p_less_point_four = pbeta(.4, a_n, b_n)
+n_draws = 10000
+post_draws = rbeta(n_draws, a_n, b_n)
+p_draws = 100 * sum(post_draws <= 0.4) / length(post_draws)
+p_true = 100 * pbeta(.4, a_n, b_n)
 
 # 1.3
 
 n_draws = 10000
 post_draws = rbeta(n_draws, a_n, b_n)
 lodds = log(post_draws/(1-post_draws))
-hist(lodds, 100, prob=TRUE, col="purple")
+
+pdf("plots/1_3_log_odds.pdf", width=grid_w, height=grid_h)
+hist(lodds, 100, 
+     prob=TRUE, 
+     col="gray", 
+     xlab="", 
+     ylab="", 
+     main = '1.3 Log Odds Simulation')
 lines(density(lodds), lwd=2)
+dev.off()
