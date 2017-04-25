@@ -13,9 +13,9 @@ n_params = 3
 fit = lm(temp ~ time + I(time^2), data=df)
 summary(fit)
 
-# Prior hyper parameters
-mu0 = c(-10, 93, -85)
-covar0 = diag(c(0.64, 2.98, 2.88))
+
+mu0 = c(-10, 90, -80)
+covar0 = diag(c(.5, .5, .5))
 v0 = n - n_params
 sigma_sq0 = 1
 
@@ -78,13 +78,14 @@ n_draws = 100
 for (iter in 1:n_draws) {
   sigma_sq = rinvchisq(n=1, df=v_n, scale=sigma_sq_n)
   beta = mvrnorm(n=1, mu=mu_n, Sigma=sigma_sq*ginv(covar_n))
+  error = rnorm(n=1, 0, sigma_sq)
   # Add beta draws
   beta_1s = c(beta_1s, beta[1])
   beta_2s = c(beta_2s, beta[2])
   beta_3s = c(beta_3s, beta[3])
 }
 
-error = rnorm(n=1, 0, 1)
+error = 0
 
 # Line using mean values from simulation
 beta_1 = mean(beta_1s)
@@ -113,17 +114,16 @@ preds = higher_beta_1 + higher_beta_2*t + higher_beta_3*I(t)^2 + error
 lines(t, preds, col="red", lwd=2)
 
 legend("bottomright", 
-       legend = c("Mean Prediction","5% Prediction", "75% Prediction"),
+       legend = c("Mean","5%", "95%"),
        fill = c("black", "blue", "red"),
        inset = 0.02)
 
-# (c)
-
-
-
 # (d)
 
-# Chooses new mu0 and covar0 as the previous posterior hyper
-# parameters
+
+
+# (e)
+
+# Chooses new mu0 and covar0 as the previous posterior hyper parameters
 mu0 = mu_n
-covar0 = mu_n
+covar0 = covar_n
