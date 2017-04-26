@@ -1,7 +1,7 @@
 ---
-title: "TDDE07 Bayesian Learning - Lab 1"
+title: "TDDE07 Bayesian Learning - Lab 2"
 author: "Erik Linder-Norén - erino397"
-date: '2017-04-20'
+date: '2017-04-26'
 output: pdf_document
 ---
 
@@ -10,268 +10,408 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## 1. Bernoulli ... again.
+## 1. Linear and polynomial regression
 ### (a)
-Combining Bernoulli likelihood of 20 samples consisting of 14 successes and 6 failures with a Beta prior with parameters $\alpha_0 = \beta_0 = 2$ results in a Beta posterior $\theta | y \sim Beta(s + \alpha_0, f + \beta_0) \sim Beta(16, 8)$ from which to draw random numbers. When the number of draws increases the sample mean and sample standard deviation converges towards the theoretical mean and standard deviation. This convergence can be seen in figure 1 and figure 2.
+When choosing the parameters of the prior I reasoned that the intercept (temperature in the beginning of the year) would be around -10 degrees. The curve of the prior predictive line reaches its maximum slightly after 6 months and declines towards the end of the year.
 
-![Mean convergence towards theoretical value](plots/1_1_mean.pdf)
-
-![Standard deviation convergence towards theoretical value](plots/1_1_std_dev.pdf)
+$\mu_0 = [-10, 90, -80]\\$
+$\Omega_0 = diag([.5, .5, .5])\\$
+$\nu_0 = n - n_{params} = 366 - 3 = 363\\$
+$\sigma_0^2 = 1\\$
 
 ### (b)
-I drew 10 000 samples from the posterior and calculated $Pr(\theta < 0.4|y)$. This was done a couple of times and the values ranged from $0.35$ to $0.43$. The exact probability was $0.397$, so the probability calculated based on the simulation gave a pretty good approximation to the exact value.
+I drew 10 beta samples and plotted the resulting curves. They can be seen plotted against the data in figure 1.
+
+![Predictions beta priors](plots/1_2_prior_draws.pdf)
 
 ### (c):
-After drawing 10 000 samples from the posterior and calculating the log odds as $\phi = log(\frac{\phi}{1-\phi})$ the histogram distribution was plotted against the density. The results can be seen in figure 3.
+I drew 1000 samples from the joint posterior distribution and calculated the 95% equal tail intervals for each 
+collection of drawn beta parameters. I then plotted the line corresponding to the mean values of the beta distributions against the two lines corresponding to the lower and upper limit of the 95% credibility interval. The results can be seen in figure 2.
 
-![Log-odds](plots/1_3_log_odds.pdf)
+![Prediction of the mean betas drawn from the posterior and the upper and lower limit of the 95% credibility interval](plots/1_3_posterior_draws.pdf)
 
-## 2. Log-normal distribution and the Gini coefficient
-### (a)
-Simulating 10 000 draws from the posterior and plotting the histogram of those draws against the true posterior distribution $Inv-\chi^2(n,\tau^2)$ showed a close similarity. The results can be seen in figure 4.
+### (d)
+To compute the time that corresponded to the highest predicted temperature of the posterior I ran the following code.
 
-![Simulation of the posterior distribution $Inv-\chi^2(n,\tau^2)$](plots/2_1_chi_draws.pdf)
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+i = which.max(preds_mean)
+max_time = t[i]
+```
 
+Where i first calculate the index of the maximum temperature and then use that index to find the time corresponding to that index. In this piece of code pred_mean is a list containing the mean values of the beta draws from the posterior and t is the list containing the time.
+Multiplying the variable max_time by 366 gave the day that had the highest predicted temperature. That day was the 200th day.
+
+### (e)
+To set the new prior parameters in a way that would combat overfitting by the new model with a higher complexity I defined the prior mean as the posterior mean calculated in (c) with the additional beta parameter means set to zero, and the prior covariance matrix defined as the previous posterior covariance matrix and the rest set to zero. The reason behind this is so that the new prior has the complexity of the model that gave the prediction in (c) and the prior for the additional complexity introduced set to zero.
+
+$\mu_0$:
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+[1] -10.4  92.0 -84.3   0.0   0.0   0.0   0.0
+```
+
+$\Omega_0$:
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+      [,1]  [,2]  [,3] [,4] [,5] [,6] [,7] [,8]
+[1,] 366.5 183.5 122.5    0    0    0    0    0
+[2,] 183.5 123.0  92.0    0    0    0    0    0
+[3,] 122.5  92.0  74.2    0    0    0    0    0
+[4,]   0.0   0.0   0.0    0    0    0    0    0
+[5,]   0.0   0.0   0.0    0    0    0    0    0
+[6,]   0.0   0.0   0.0    0    0    0    0    0
+[7,]   0.0   0.0   0.0    0    0    0    0    0
+[8,]   0.0   0.0   0.0    0    0    0    0    0
+```
+
+
+
+
+## 2. Posterior approximation for classification with logistic regression
 ### (b)
-Using the posterior draws for $\sigma$ in $(a)$ to determine the Gini coefficient gave the results seen in figure 5.
+Computing the posterior mode and the observed Hessian evaluated at the posterior mode I received the following values.
 
-![Gini coefficient](plots/2_2_gini_draws.pdf)
+$\tilde{\beta}$:
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+[1]  0.627 -0.020  0.180  0.168 -0.145 -0.082 -1.359 -0.025
+```
+
+$J^{-1}(\tilde{\beta})$:
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+         [,1]     [,2]     [,3]     [,4]     [,5]     [,6]     [,7]     [,8]
+[1,]  2.26602  0.00334 -0.06545 -0.01179  0.04578 -0.03029 -0.18875 -0.09802
+[2,]  0.00334  0.00025 -0.00056 -0.00003  0.00014 -0.00004  0.00051 -0.00014
+[3,] -0.06545 -0.00056  0.00622 -0.00036  0.00190  0.00000 -0.00613  0.00175
+[4,] -0.01179 -0.00003 -0.00036  0.00435 -0.01425 -0.00013 -0.00147  0.00054
+[5,]  0.04578  0.00014  0.00190 -0.01425  0.05558 -0.00033  0.00321  0.00051
+[6,] -0.03029 -0.00004  0.00000 -0.00013 -0.00033  0.00072  0.00518  0.00110
+[7,] -0.18875  0.00051 -0.00613 -0.00147  0.00321  0.00518  0.15126  0.00677
+[8,] -0.09802 -0.00014  0.00175  0.00054  0.00051  0.00110  0.00677  0.01997
+```
+
+Plotting the distribution of the beta parameter NSmallChild and its 95% credibility interval it could be seen that it ranged between $[-2.121, -0.597]$. Comparing that to the rest of the beta distributions I could see that those values were relatively large to the others. This feature should thereby be a good determinant of whether a woman works or not. The plot of the credibility interval for this parameter can be seen in figure 4.
+
+![Credibility interval of NSmallChild](plots/2_2_nsmallchild_cred_interval.pdf)
 
 ### (c)
-I calculated the Equal Tail Interval and Highest Posterior Density using the Gini coefficient calculated in $(b)$ to get the results seen in figure 6. The right tail of the density seemed to shift the Equal Tail Interval to the right. The Highest Posterior Density interval was not affected by the tail and seemed to give better results in this case.
+I used the posterior mode and the posterior covariance calculated in (b) to draw beta samples from the posterior distribution of beta. I then used each beta sample together with the sample to be determined as working or not to calculate the probability using the inverse logit. This probability was then used as a parameter to draw a $\hat{y}$ from the predictive distribution. I ran the simulation for 1000 iterations and plotted the density of this distribution. The plot can be seen in figure 5. By this distribution it seems likely that the woman in question is working.  
 
-![Credibility intervals](plots/2_3_posterior_intervals.pdf)
-
-## 3. Bayesian inference for the concentration parameter in the von Mises distribution.
-The posterior distribution of $\kappa$ was calculated as the product of likelihoods multiplied with the prior. The posterior mode of kappa was  calculated as the $\kappa$ value that gives the highest probability. This value was $2.12$. The plot can be seen in figure 7.
-
-![Von Mises posterior distribution](plots/3_posterior_mode.pdf)
+![Predictive distribution](plots/2_3_pred_distr.pdf)
 
 $\pagebreak$
 
 ## Assignment 1
 ```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+require(MASS)
+require(geoR)
+
 grid_w = 6
 grid_h = 5
 
-# Experiment Setup
-a = 2
-b = 2
-n = 20
-s = 14
-p = s / n
 
-# Posterior alpha and beta
-a_n = a + n * p
-b_n = b + n * (1 - p)
+# Lab 2 - Assignment 1
 
-# Theoretical mean and standard deviations
-mean = a_n / (a_n + b_n)
-std_dev = sqrt(a_n*b_n / (((a_n + b_n)**2)*(a_n + b_n + 1)))
+df = read.table("data/TempLinkoping2016.txt", header=TRUE)
 
-# 1.1
+n = 366
+n_params = 3
 
-calc_mean_stddev <- function(n_draw){
-  post_draws = rbeta(n_draw, a_n, b_n)
-  m = mean(post_draws)
-  s = sd(post_draws)
-  
-  return(c(m, s))
+# (a)
+
+# Linear model (test)
+fit = lm(temp ~ time + I(time^2), data=df)
+summary(fit)
+
+
+mu0 = c(-10, 90, -80)
+covar0 = diag(c(.5, .5, .5))
+v0 = n - n_params
+sigma_sq0 = 1
+
+# (b)
+
+t = df[["time"]]
+temp = df[["temp"]]
+
+pdf("plots/1_2_prior_draws.pdf", width=grid_w, height=grid_h)
+
+plot(t, 
+     temp, 
+     type="p", 
+     col="lightgray", 
+     ylim=c(-30, 30), 
+     xlim=c(0,1), 
+     xlab="Fraction of year", 
+     ylab="Temperature",
+     main="Prior prediction")
+
+n_draws = 10
+for (iter in 1:n_draws) {
+  sigma_sq = rinvchisq(n=1, df=v0, scale=sigma_sq0)
+  beta = mvrnorm(n=1, mu=mu0, Sigma=sigma_sq*ginv(covar0))
+  error = rnorm(n=1, 0, 1)
+  preds = beta[1] + beta[2]*t + beta[3]*I(t)^2 + error
+  lines(t, preds)
 }
 
-# Calculate mean and variation for 2 to 10000 draws from posterior
-data = sapply(2:10000, calc_mean_stddev)
-
-# Save plot for the convergence of mean and variation
-
-pdf("plots/1_1_mean.pdf", width=grid_w, height=grid_h)
-  mean_values = data[1,]
-  plot(mean_values, 
-       type="l", 
-       col="gray", 
-       xlab="Iterations", 
-       ylab="Mean", 
-       main = '1.1 Mean convergence')
-  abline(h=mean)
 dev.off()
 
-pdf("plots/1_1_std_dev.pdf", width=grid_w, height=grid_h)
-  standard_deviations = data[2,]
-  plot(standard_deviations, 
-       type="l", 
-       col="gray", 
-       xlab="Iterations", 
-       ylab="Standard Deviation", 
-       main = '1.1 Standard deviation convergence ')
-  abline(h=std_dev)
+# (c)
+
+# 366x3 (1 t t^2)
+X = t(rbind(rep(1,n), t, I(t)^2))
+y = as.vector(temp)
+
+X_X = t(X) %*% X
+
+# Least squares approximate of beta
+beta_hat = ginv(X_X) %*% t(X) %*% y
+
+# Posterior parameters
+mu_n = ginv(X_X + covar0)%*%(X_X%*%beta_hat+covar0%*%mu0)
+covar_n = X_X + covar0
+v_n = v0 + n
+sigma_sq_n = as.double((1/v_n)*(v0%*%sigma_sq0 + (t(y)%*%y + t(mu0)%*%covar0%*%mu0 - t(mu_n)%*%covar_n%*%mu_n)))
+
+pdf("plots/1_3_posterior_draws.pdf", width=grid_w, height=grid_h)
+
+plot(t, 
+     temp, 
+     type="p", 
+     col="lightgray", 
+     ylim=c(-30, 30), 
+     xlim=c(0,1), 
+     xlab="Fraction of year", 
+     ylab="Temperature",
+     main="Posterior prediction")
+
+beta_1s = c()
+beta_2s = c()
+beta_3s = c()
+
+n_draws = 1000
+for (iter in 1:n_draws) {
+  sigma_sq = rinvchisq(n=1, df=v_n, scale=sigma_sq_n)
+  beta = mvrnorm(n=1, mu=mu_n, Sigma=sigma_sq*ginv(covar_n))
+  error = rnorm(n=1, 0, sigma_sq)
+  # Add beta draws
+  beta_1s = c(beta_1s, beta[1])
+  beta_2s = c(beta_2s, beta[2])
+  beta_3s = c(beta_3s, beta[3])
+}
+
+error = 0
+
+# Line using mean values from simulation
+beta_1 = mean(beta_1s)
+beta_2 = mean(beta_2s)
+beta_3 = mean(beta_3s)
+preds_mean = beta_1 + beta_2*t + beta_3*I(t)^2 + error
+lines(t, preds_mean, lwd=2)
+
+# Equal tail interval
+beta_1_eti = quantile(beta_1s, probs=c(0.025, 0.975))
+beta_2_eti = quantile(beta_2s, probs=c(0.025, 0.975))
+beta_3_eti = quantile(beta_3s, probs=c(0.025, 0.975))
+
+# Lower
+lower_beta_1 = beta_1_eti[1]
+lower_beta_2 = beta_2_eti[1]
+lower_beta_3 = beta_3_eti[1]
+preds_low = lower_beta_1 + lower_beta_2*t + lower_beta_3*I(t)^2 + error
+lines(t, preds_low, col="blue", lwd=2)
+
+# Higher
+higher_beta_1 = beta_1_eti[2]
+higher_beta_2 = beta_2_eti[2]
+higher_beta_3 = beta_3_eti[2]
+preds_high = higher_beta_1 + higher_beta_2*t + higher_beta_3*I(t)^2 + error
+lines(t, preds_high, col="red", lwd=2)
+
+legend("bottomright", 
+       legend = c("Mean","5%", "95%"),
+       fill = c("black", "blue", "red"),
+       inset = 0.02)
+
 dev.off()
 
+# (d)
 
-# 1.2
+pdf("plots/1_4_warm_days.pdf", width=grid_w, height=grid_h)
 
-n_draws = 10000
-post_draws = rbeta(n_draws, a_n, b_n)
-p_draws = 100 * sum(post_draws <= 0.4) / length(post_draws)
-p_true = 100 * pbeta(.4, a_n, b_n)
+# Could also solve for time by derivation set to zero
+i = which.max(preds_mean)
+max_time = t[i]
+max_day = round(366 * max_time)
 
-# 1.3
+# Std dev chosen by prediction plot
+xGrid = seq(0, 366, 1)
+n = dnorm(xGrid, mean=max_time*366, sd=0.1*366)
+plot(xGrid, 
+     n, 
+     type="l", 
+     lwd=2, 
+     xlab="Days", 
+     ylab="Probability", 
+     main="Prob. distribution of day with hottest temperature")
 
-n_draws = 10000
-post_draws = rbeta(n_draws, a_n, b_n)
-lodds = log(post_draws/(1-post_draws))
-
-pdf("plots/1_3_log_odds.pdf", width=grid_w, height=grid_h)
-hist(lodds, 100, 
-     prob=TRUE, 
-     col="gray", 
-     xlab="", 
-     ylab="", 
-     main = '1.3 Log Odds Simulation')
-lines(density(lodds), lwd=2)
 dev.off()
+
+# (e)
+
+# Chooses new mu0 and covar0 as the previous posterior hyper parameters and the additional
+# betas set to zero (to combat overfitting).
+mu0 = c(mu_n, 0, 0, 0, 0)
+covar0 = matrix(0, nrow=8, ncol=8)
+covar0[1:3, 1:3] = covar_n
+
 ```
 
 $\pagebreak$
 
 ## Assignment 2
 ```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
-require("geoR")
+require(MASS)
+require(geoR)
+library(mvtnorm)
+library(LaplacesDemon)
 
 grid_w = 6
 grid_h = 5
 
 
-# 2.1
+# Lab 2 - Assignment 2
 
-y = c(14, 25, 45, 25, 30, 33, 19, 50, 34, 67)
-mean = 3.5
-n = length(y)
-n_draws = 10000
+df = read.table("data/WomenWork.dat.txt", header=TRUE)
 
-# Sample variance
-tau_sq = sum((log(y) - mean)^2) / n
-# X ~ chi(n)
-X_draws = rchisq(n_draws, n)
-# This is a draw from inv_chi(n, tausq)
-var = n * tau_sq / X_draws
-interval = seq(min(var), max(var), 0.001)
-invchisq = dinvchisq(interval, n, tau_sq)
+# (a)
 
-pdf("plots/2_1_chi_draws.pdf", width=grid_w, height=grid_h)
-# Plot draws against density
-hist(var, 
-     500, 
-     border="gray", 
-     prob=TRUE, 
-     xlim=c(0,1.5), 
-     xlab="Posterior of the variance", 
-     ylab="", 
-     main = '2.1 Posterior draws against posterior distribution')
-lines(interval, invchisq, lwd=2)
-dev.off()
+glmModel <- glm(Work ~ 0 + ., data = df,family = binomial)
+summary(glmModel)
 
+# (b)
 
-# 2.2
+y = df[["Work"]]
+X = as.matrix(df[,2:9])
+headers = colnames(df)
+n = dim(X)[1]
+n_params = dim(X)[2]
 
-z = sqrt(var / 2)
-G = 2*pnorm(z)-1
+tau_sq = 100 # tau = 10
 
-pdf("plots/2_2_gini_draws.pdf", width=grid_w, height=grid_h)
-hist(G, 
-     100, 
-     xlab="Gini Coefficient", 
-     ylab="", 
-     main = '2.2 Posterior distribution of the Gini coefficient')
-dev.off()
+# Initialize prior hyper parameters
+mu_prior <- as.vector(rep(0,n_params))
+sigma_prior = diag(tau_sq, n_params, n_params)
 
-# 2.3
-
-# Equal tail interval
-equal_tail_interval = quantile(G, probs=c(0.025, 0.975))
-
-# Highest Posterior Density
-gd = density(G)
-# Order x and y by y from high to low
-ordered_x = gd$x[order(-gd$y)]
-ordered_y = gd$y[order(-gd$y)]
-
-# Iterate until 95% of prob. is captured
-prob_mass = 0
-total_mass = sum(gd$y)
-for(i in 1:length(gd$y)){
-  prob_mass = prob_mass + ordered_y[i]
-  if(prob_mass / total_mass >= 0.95){
-    break
-  }
+# Calculate the log posterior
+LogPosteriorLogistic <- function(betas, y, X, mu, Sigma){
+  
+  # Multiply data by parameters to get predictions
+  predictions <- X%*%betas;
+  
+  # Log likelihood                                   
+  log_likelihood <- sum(predictions*y - log(1 + exp(predictions)));
+  if (abs(log_likelihood) == Inf) log_likelihood = -20000;
+  
+  # Log prior
+  log_prior <- dmvnorm(betas, mu_prior, sigma_prior, log=TRUE);
+  
+  # Sum of log likelihood and log prior is log posterior
+  return(log_likelihood + log_prior)
 }
 
-# Calculate the interval
-a = min(ordered_x[1:i])
-b = max(ordered_x[1:i])
-highest_posterior_density = c(a, b)
+log_posterior = LogPosteriorLogistic
 
-pdf('plots/2_3_posterior_intervals.pdf', width=grid_w, height=grid_h)
-plot(gd, col="red", lwd=2, main="2.3 Credibility intervals")
-lines(equal_tail_interval, rep(0.12, 2), col="black", lwd=3)
-lines(highest_posterior_density, rep(0.02, 2), col="gray", lwd=3)
-legend("topright", 
-       legend = c("ETI","HPD"),
-       fill = c("black", "gray"),
-       inset = 0.02)
+# Initialize as zeros
+init_betas = rep(0, n_params)
+
+opt_results = optim(init_betas,
+                    log_posterior,
+                    gr=NULL,
+                    y,
+                    X,
+                    mu_prior,
+                    sigma_prior,
+                    method=c("BFGS"),
+                    control=list(fnscale=-1),
+                    hessian=TRUE)
+
+# Posterior mode (beta hat)
+post_mode = opt_results$par
+# Posterior covariance (J^-1(beta hat))
+post_cov = -solve(opt_results$hessian)
+approx_post_std_dev = sqrt(diag(post_cov))
+
+pdf("plots/2_2_nsmallchild_cred_interval.pdf", width=grid_w, height=grid_h)
+
+# Plot NSmallChild parameter
+pmode = post_mode[7]
+pstd = approx_post_std_dev[7]
+beta_grid = seq(pmode - 4*pstd, pmode + 4 * pstd, length=1000)
+eti = qnorm(c(0.025, 0.975), pmode, pstd)
+dn = dnorm(x=beta_grid, mean=pmode, sd=pstd)
+plot(beta_grid, dn, type = "l", lwd = 2, main="ETI for NSmallChild parameter", ylab = '', xlab=headers[8])
+lines(eti, rep(0.04, 2), col="black", lwd=2)
+
 dev.off()
+
+# (c)
+
+# Sample to predict
+constant = 1
+husband = 10
+edu_years = 8
+exp_years1 = 10
+exp_years2 = (exp_years1/10)^2
+age = 40
+n_small_child = 1
+n_big_child = 1
+
+
+sample = c(constant,
+           husband,
+           edu_years,
+           exp_years1,
+           exp_years2,
+           age,
+           n_small_child,
+           n_big_child)
+
+y_draws = c()
+n_draws = 1000
+for (i in 1:n_draws){
+  # Draw a beta
+  beta_draw = rmvnorm(n=1, mean=post_mode, sigma=post_cov)
+  e = exp(sample%*%beta_draw)
+  # Calculate the probability (bernoulli parameter)
+  p = e / (1 + e)
+  # Draw a y prediction
+  y_draw = rbern(n=1, prob=p)
+  y_draws = c(y_draws, y_draw)
+}
+
+pdf("plots/2_3_pred_distr.pdf", width=grid_w, height=grid_h)
+
+prob_density = density(y_draws)
+plot(prob_density, 
+     type="l", 
+     lwd=2, 
+     xlim=c(0,1), 
+     ylab="Density", 
+     xlab="y (0 = not working, 1 = working)", 
+     main="Predictive distribution for sample")
+
+sample = data.frame(Constant=1, 
+                    HusbandInc=husband, 
+                    EducYears=edu_years, 
+                    ExpYears=exp_years1, 
+                    ExpYears2=exp_years2, 
+                    Age=age, 
+                    NSmallChild=n_small_child, 
+                    NBigChild=n_big_child)
+
+dev.off()
+
+glm_pred = predict.glm(glmModel, newdata=sample)
 ```
 
 $\pagebreak$
-
-## Assignment 3
-```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
-grid_w = 6
-grid_h = 5
-
-# 3.1
-
-y = c(-2.44, 2.14, 2.54, 1.83, 2.02, 2.33, -2.79, 2.23, 2.07, 2.02)
-mean = 2.39
-k = seq(0.001,10,0.01)
-
-calc_prob = function(k_val, y_val){
-  prob = exp(k_val * cos(y_val - mean)) / (2*pi*besselI(k_val, 0))
-  
-  return (prob)
-}
-
-calc_post = function(k_val){
-  probabilities = sapply(y, calc_prob, k_val=k_val)
-  prior = dexp(k_val)
-  posterior = prod(probabilities) * prior
-  
-  return (posterior)
-}
-
-posterior = sapply(k, calc_post)
-
-pdf("plots/3_posterior_mode.pdf", width=grid_w, height=grid_h)
-plot(k, 
-     posterior, type="l", 
-     col="black", 
-     lwd=2, 
-     xlab="Kappa", 
-     ylab="Posterior", 
-     main="3. Posterior density and mode")
-
-# 3.2
-
-# Find the k value which maximizes posterior
-mode = k[which.max(posterior)]
-
-# Plot vertical line where k maximizes posterior
-abline(v=mode, col="gray", lwd=2)
-
-# Legend for posterior and mode
-legend('topright', 
-       c('Posterior', 'Mode'), 
-       fill=c("black", "gray"), 
-       inset=0.02)
-dev.off()
-```
 

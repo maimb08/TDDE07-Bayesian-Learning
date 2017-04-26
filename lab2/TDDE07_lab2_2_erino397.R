@@ -1,6 +1,11 @@
 require(MASS)
 require(geoR)
 library(mvtnorm)
+library(LaplacesDemon)
+
+grid_w = 6
+grid_h = 5
+
 
 # Lab 2 - Assignment 2
 
@@ -16,6 +21,7 @@ summary(glmModel)
 y = df[["Work"]]
 X = as.matrix(df[,2:9])
 headers = colnames(df)
+n = dim(X)[1]
 n_params = dim(X)[2]
 
 tau_sq = 100 # tau = 10
@@ -63,12 +69,7 @@ post_mode = opt_results$par
 post_cov = -solve(opt_results$hessian)
 approx_post_std_dev = sqrt(diag(post_cov))
 
-# Plots of the marginal distributions of the parameters
-# par(mfrow = c(2,2))
-# for (k in 1:7){
-#   beta_grid <- seq(0, post_mode[k] + 4*approx_post_std_dev[k], length = 1000)
-#   plot(beta_grid, dnorm(x = beta_grid, mean = post_mode[k], sd = approx_post_std_dev[k]), type = "l", lwd = 2, main = names(post_mode)[k], ylab = '', xlab = headers[k+1])
-# }
+pdf("plots/2_2_nsmallchild_cred_interval.pdf", width=grid_w, height=grid_h)
 
 # Plot NSmallChild parameter
 pmode = post_mode[7]
@@ -79,10 +80,13 @@ dn = dnorm(x=beta_grid, mean=pmode, sd=pstd)
 plot(beta_grid, dn, type = "l", lwd = 2, main="ETI for NSmallChild parameter", ylab = '', xlab=headers[8])
 lines(eti, rep(0.04, 2), col="black", lwd=2)
 
+dev.off()
+
 # (c)
 
 # Sample to predict
-husband = 1
+constant = 1
+husband = 10
 edu_years = 8
 exp_years1 = 10
 exp_years2 = (exp_years1/10)^2
@@ -90,7 +94,8 @@ age = 40
 n_small_child = 1
 n_big_child = 1
 
-sample = c(1,
+
+sample = c(constant,
            husband,
            edu_years,
            exp_years1,
@@ -99,9 +104,39 @@ sample = c(1,
            n_small_child,
            n_big_child)
 
-# Normal prior and normal posterior => Normal predictive distribution
-sample_cov = diag(1, n_params) # ?
-mu_n = post_mode
-covar_n = sample_cov + post_cov
+y_draws = c()
+n_draws = 1000
+for (i in 1:n_draws){
+  # Draw a beta
+  beta_draw = rmvnorm(n=1, mean=post_mode, sigma=post_cov)
+  e = exp(sample%*%beta_draw)
+  # Calculate the probability (bernoulli parameter)
+  p = e / (1 + e)
+  # Draw a y prediction
+  y_draw = rbern(n=1, prob=p)
+  y_draws = c(y_draws, y_draw)
+}
 
-distr = dmvnorm(sample, mean=mu_n, sigma=covar_n)
+pdf("plots/2_3_pred_distr.pdf", width=grid_w, height=grid_h)
+
+prob_density = density(y_draws)
+plot(prob_density, 
+     type="l", 
+     lwd=2, 
+     xlim=c(0,1), 
+     ylab="Density", 
+     xlab="y (0 = not working, 1 = working)", 
+     main="Predictive distribution for sample")
+
+sample = data.frame(Constant=1, 
+                    HusbandInc=husband, 
+                    EducYears=edu_years, 
+                    ExpYears=exp_years1, 
+                    ExpYears2=exp_years2, 
+                    Age=age, 
+                    NSmallChild=n_small_child, 
+                    NBigChild=n_big_child)
+
+dev.off()
+
+glm_pred = predict.glm(glmModel, newdata=sample)
