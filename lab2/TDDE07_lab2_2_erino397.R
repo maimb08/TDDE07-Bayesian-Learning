@@ -3,8 +3,9 @@ require(geoR)
 library(mvtnorm)
 library(LaplacesDemon)
 
-grid_w = 6
-grid_h = 5
+
+grid_w = 5
+grid_h = 4
 
 
 # Lab 2 - Assignment 2
@@ -77,7 +78,15 @@ pstd = approx_post_std_dev[7]
 beta_grid = seq(pmode - 4*pstd, pmode + 4 * pstd, length=1000)
 eti = qnorm(c(0.025, 0.975), pmode, pstd)
 dn = dnorm(x=beta_grid, mean=pmode, sd=pstd)
-plot(beta_grid, dn, type = "l", lwd = 2, main="ETI for NSmallChild parameter", ylab = '', xlab=headers[8])
+plot(beta_grid, 
+     dn, 
+     type = "l", 
+     lwd = 2, 
+     main="ETI for NSmallChild parameter", 
+     ylab = 'Density', xlab=headers[8],
+     cex.main=.9, 
+     cex.lab=.9, 
+     cex.axis=.8)
 lines(eti, rep(0.04, 2), col="black", lwd=2)
 
 dev.off()
@@ -130,6 +139,9 @@ plot(prob_density,
      xlim=c(0,1), 
      ylab="Density", 
      xlab="y (0 = not working, 1 = working)", 
-     main="Predictive distribution for sample")
+     main="Predictive distribution for sample",
+     cex.main=.9, 
+     cex.lab=.9, 
+     cex.axis=.8)
 
 dev.off()

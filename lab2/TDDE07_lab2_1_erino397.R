@@ -1,8 +1,9 @@
 require(MASS)
 require(geoR)
 
-grid_w = 6
-grid_h = 5
+
+grid_w = 5
+grid_h = 4
 
 
 # Lab 2 - Assignment 1
@@ -32,14 +33,17 @@ temp = df[["temp"]]
 pdf("plots/1_2_prior_draws.pdf", width=grid_w, height=grid_h)
 
 plot(t, 
-     temp, 
+     temp,
      type="p", 
      col="lightgray", 
      ylim=c(-30, 30), 
      xlim=c(0,1), 
      xlab="Fraction of year", 
      ylab="Temperature",
-     main="Prior prediction")
+     main="Prior prediction",
+     cex.main=.9, 
+     cex.lab=.9, 
+     cex.axis=.8)
 
 n_draws = 10
 for (iter in 1:n_draws) {
@@ -79,7 +83,10 @@ plot(t,
      xlim=c(0,1), 
      xlab="Fraction of year", 
      ylab="Temperature",
-     main="Posterior prediction with credibility interval")
+     main="Posterior prediction with credibility interval",
+     cex.main=.9, 
+     cex.lab=.9, 
+     cex.axis=.8)
 
 beta_1s = c()
 beta_2s = c()
@@ -149,7 +156,10 @@ plot(xGrid,
      lwd=2, 
      xlab="Days", 
      ylab="Probability", 
-     main="Prob. distribution of day with hottest temperature")
+     main="Prob. distribution of day with hottest temperature",
+     cex.main=.9, 
+     cex.lab=.9, 
+     cex.axis=.8)
 
 dev.off()
 
