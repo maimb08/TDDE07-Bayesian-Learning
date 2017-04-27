@@ -89,10 +89,10 @@ $J^{-1}(\tilde{\beta})$:
 
 Plotting the distribution of the beta parameter NSmallChild and its 95% credibility interval it could be seen that it ranged between $[-2.121, -0.597]$. Comparing that to the rest of the beta distributions I could see that those values were relatively large to the others. This feature should thereby be a good determinant of whether a woman works or not. The plot of the credibility interval for this parameter can be seen in figure 4.
 
-![Credibility interval of NSmallChild](plots/2_2_nsmallchild_cred_interval.pdf)
+![95% credibility interval of NSmallChild probability distribution](plots/2_2_nsmallchild_cred_interval.pdf)
 
 ### (c)
-I used the posterior mode and the posterior covariance calculated in (b) to draw beta samples from the posterior distribution of beta. I then used each beta sample together with the sample to be determined as working or not to calculate the probability using the inverse logit. This probability was then used as a parameter to draw a $\hat{y}$ from the predictive distribution. I ran the simulation for 1000 iterations and plotted the density of this distribution. The plot can be seen in figure 5. By this distribution it seems likely that the woman in question is working.  
+I used the posterior mode and the posterior covariance calculated in (b) to draw beta samples from the posterior distribution of beta. I then used each beta sample together with the sample to be determined as working or not to calculate the probability using the inverse logit. This probability was then used as a parameter to draw a $\hat{y}$ from the predictive distribution. I ran the simulation for 1000 iterations and plotted the density of this distribution. The plot can be seen in figure 5. By this distribution it seems likely that the woman in question is not working. Calculating the number of draws where the prediction is 1 divided by the total number of draws gives an approximate probability of 23.7% of the woman working.
 
 ![Predictive distribution](plots/2_3_pred_distr.pdf)
 

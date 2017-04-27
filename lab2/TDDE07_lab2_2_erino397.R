@@ -108,7 +108,7 @@ y_draws = c()
 n_draws = 1000
 for (i in 1:n_draws){
   # Draw a beta
-  beta_draw = rmvnorm(n=1, mean=post_mode, sigma=post_cov)
+  beta_draw = as.vector(rmvnorm(n=1, mean=post_mode, sigma=post_cov))
   e = exp(sample%*%beta_draw)
   # Calculate the probability (bernoulli parameter)
   p = e / (1 + e)
@@ -116,6 +116,10 @@ for (i in 1:n_draws){
   y_draw = rbern(n=1, prob=p)
   y_draws = c(y_draws, y_draw)
 }
+
+outcomes = table(y_draws)
+n_working = outcomes[names(outcomes)==1]
+prob_working = n_working / length(y_draws)
 
 pdf("plots/2_3_pred_distr.pdf", width=grid_w, height=grid_h)
 
@@ -128,15 +132,4 @@ plot(prob_density,
      xlab="y (0 = not working, 1 = working)", 
      main="Predictive distribution for sample")
 
-sample = data.frame(Constant=1, 
-                    HusbandInc=husband, 
-                    EducYears=edu_years, 
-                    ExpYears=exp_years1, 
-                    ExpYears2=exp_years2, 
-                    Age=age, 
-                    NSmallChild=n_small_child, 
-                    NBigChild=n_big_child)
-
 dev.off()
-
-glm_pred = predict.glm(glmModel, newdata=sample)
