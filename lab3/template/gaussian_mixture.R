@@ -71,7 +71,8 @@ mixDensMean <- rep(0,length(xGrid))
 effIterCount <- 0
 ylim <- c(0,2*max(hist(x)$density))
 
-
+gibbs_thetas = matrix(0,nIter,2)
+gibbs_sigmas = matrix(0,nIter,2)
 for (k in 1:nIter){
   message(paste('Iteration number:',k))
   alloc <- S2alloc(S) # Just a function that converts between different representations of the group allocations
@@ -91,10 +92,14 @@ for (k in 1:nIter){
     theta[j] <- rnorm(1, mean = muPost, sd = sqrt(tau2Post))
   }
   
+  gibbs_thetas[k, ] = theta
+  
   # Update sigma2's
   for (j in 1:nComp){
     sigma2[j] <- rScaledInvChi2(1, df = nu0[j] + nAlloc[j], scale = (nu0[j]*sigma2_0[j] + sum((x[alloc == j] - theta[j])^2))/(nu0[j] + nAlloc[j]))
   }
+  
+  gibbs_sigmas[k,] = sigma2
   
   # Update allocation
   for (i in 1:nObs){
@@ -126,9 +131,81 @@ for (k in 1:nIter){
   
 }
 
-pdf("plots/3_1_gibbs_mixt_norm.pdf", width=grid_w, height=grid_h)
 
-hist(x, breaks = 20, freq = FALSE, xlim = c(xGridMin,xGridMax), xlab="Precipitation", ylab="Density", main = "Rainfall: Normal mixture")
+# Calculate mean of batches of 2 draws to visualize the
+# auto correlation between sequential draws
+t1 = c()
+t2 = c()
+s1 = c()
+s2 = c()
+for (i in 1:nIter){
+  if(i%%2 == 0){
+    t1 = c(t1, mean(gibbs_thetas[,1][i-1:i]))
+    t2 = c(t2, mean(gibbs_thetas[,2][i-1:i]))
+    s1 = c(s1, mean(gibbs_sigmas[,1][i-1:i]))
+    s2 = c(s2, mean(gibbs_sigmas[,2][i-1:i]))
+  }
+}
+
+
+# Plots displaying convergence of the Normal hyper 
+# parameters during sampling
+
+pdf("plots/3_1_2_conv_mixt_mu.pdf", width=grid_w, height=grid_h)
+
+# Plot the auto correlation (convergence) between draws of mu
+min_t = min(c(min(t1), min(t2)))
+max_t = max(c(max(t1), max(t2)))
+plot(t1, 
+     type="l", 
+     ylim=c(min_t, max_t), 
+     cex=.1,
+     lwd=2,
+     main=expression(paste("Convergence of Gibbs Sampling ", "(", theta, ")", sep=" ")),
+     xlab="Batches of draws",
+     ylab=expression(paste("Mean of batches of sequential draws of ", theta, sep=" ")))
+
+lines(t2, lwd=2, col="gray")
+
+legend("topright", 
+       box.lty = 1, 
+       legend = c(expression(paste(theta, " (1)", sep=" ")),
+                  expression(paste(theta, " (2)", sep=" "))), 
+       col=c("black","gray"), 
+       lwd = 2)
+
+dev.off()
+
+
+pdf("plots/3_1_2_conv_mixt_sigma.pdf", width=grid_w, height=grid_h)
+
+# Plot the auto correlation (convergence) between draws of sigma
+min_s = min(c(min(s1), min(s2)))
+max_s = max(c(max(s1), max(s2)))
+plot(s1, 
+     type="l", 
+     ylim=c(min_s, max_s), 
+     cex=.1,
+     lwd=2,
+     main=expression(paste("Convergence of Gibbs Sampling ", "(", sigma^2, ")", sep=" ")),
+     xlab="Batches of draws",
+     ylab=expression(paste("Mean of batches of sequential draws of ", sigma^2, sep=" ")))
+
+lines(s2, lwd=2, col="gray")
+
+legend("topright", 
+       box.lty = 1, 
+       legend = c(expression(paste(sigma^2, " (1)", sep=" ")),
+                  expression(paste(sigma^2, " (2)", sep=" "))), 
+       col=c("black","gray"), 
+       lwd = 2)
+
+dev.off()
+
+
+pdf("plots/3_1_3_mixt_norm.pdf", width=grid_w, height=grid_h)
+
+hist(x, breaks = 20, cex=.1, freq = FALSE, xlim = c(xGridMin,xGridMax), xlab="Precipitation", ylab="Density", main = "Rainfall: Mixture of Normals")
 lines(xGrid, mixDensMean, type = "l", lwd = 2, lty = 4, col = "red")
 lines(xGrid, dnorm(xGrid, mean = mean(x), sd = apply(x,2,sd)), type = "l", lwd = 2, col = "blue")
 legend("topright", box.lty = 1, legend = c("Data histogram","Mixture density","Normal density"), col=c("black","red","blue"), lwd = 2)
