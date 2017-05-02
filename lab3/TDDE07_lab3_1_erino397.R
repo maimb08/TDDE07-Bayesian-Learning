@@ -21,13 +21,13 @@ sigma0 = 1 / v0
 n_draws = 4000
 
 # Initial value for sigma
-sigma = rinvchisq(n=1, v0, sigma0)
+sigma_sq = rinvchisq(n=1, v0, sigma0)
 
 gibbs_draws = matrix(0,n_draws,2)
 for(i in 1:n_draws){
-  mu = rnorm(n=1, mean=data_mean, sd=(sigma/n))
-  sigma = rinvchisq(n=1, n, (v0*sigma0 + sum((data - mu)^2))/(n + v0)) 
-  gibbs_draws[i,] = c(mu, sigma)
+  mu = rnorm(n=1, mean=data_mean, sd=sqrt(sigma_sq/n))
+  sigma_sq = rinvchisq(n=1, n, (v0*sigma0 + sum((data - mu)^2))/(n + v0)) 
+  gibbs_draws[i,] = c(mu, sigma_sq)
 }
 
 
@@ -40,11 +40,12 @@ var_draws = gibbs_draws[,2]
 mean_means = c()
 mean_vars = c()
 for (i in 1:n_draws){
-  if(i%%5 == 0){
-    mean_means = c(mean_means, mean(mean_draws[i-4:i]))
-    mean_vars = c(mean_vars, mean(var_draws[i-4:i]))
+  if(i%%2 == 0){
+    mean_means = c(mean_means, mean(mean_draws[i-1:i]))
+    mean_vars = c(mean_vars, mean(var_draws[i-1:i]))
   }
 }
+
 
 pdf("plots/3_1_gibbs_conv_mu.pdf", width=grid_w, height=grid_h)
 
@@ -73,5 +74,40 @@ plot(mean_vars,
      main=expression(paste("Convergence of Gibbs Sampling ", "(", sigma^2, ")", sep=" ")),
      xlab="Batches of draws",
      ylab=expression(paste("Mean of batches of sequential draws of ", sigma^2, sep=" ")))
+
+dev.off()
+
+
+
+# Kernel density estimate
+pdf("plots/3_1_kernel_dens_est.pdf", width=grid_w, height=grid_h)
+
+kernel_density = density(data)
+
+plot(kernel_density$x, 
+     kernel_density$y, 
+     type="l",
+     ylab="Density",
+     xlab="Precipitation",
+     main="Rainfall: Kernel density estimate")
+
+dev.off()
+
+# Normal density from (a)
+pdf("plots/3_1_gibbs_norm_density.pdf", width=grid_w, height=grid_h)
+
+mean_mean = mean(mean_draws)
+mean_var = mean(var_draws)
+
+x_grid = seq(mean_mean - 2, mean_mean + 2, 0.0001)
+
+normal_density = dnorm(x_grid, mean=mean_mean, sd=sqrt(mean_var/n))
+
+plot(x_grid, 
+     normal_density, 
+     type="l",
+     ylab="Density",
+     xlab="Precipitation",
+     main="Rainfall: Normal density")
 
 dev.off()
