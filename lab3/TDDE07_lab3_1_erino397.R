@@ -102,12 +102,12 @@ dev.off()
 # Normal density from (a)
 pdf("plots/3_1_3_normal_density.pdf", width=grid_w, height=grid_h)
 
-mean_mean = mean(mean_draws)
-mean_var = mean(var_draws)
+mean = mean(mean_draws)
+std_dev = sqrt(mean(var_draws)/n)
 
 x_grid = seq(mean_mean - 2, mean_mean + 2, 0.0001)
 
-normal_density = dnorm(x_grid, mean=mean_mean, sd=sqrt(mean_var/n))
+normal_density = dnorm(x_grid, mean=mean, sd=std_dev)
 
 plot(x_grid, 
      normal_density, 
