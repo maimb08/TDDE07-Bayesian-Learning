@@ -73,7 +73,7 @@ draw_u = function(beta) {
 # Initial prediction
 u = rnorm(n_samples, covar0)
 
-n_draws = 1000
+n_draws = 500
 beta_draws = matrix(0, n_draws, n_features)
 u_draws = matrix(0, n_draws, n_samples)
 for(i in 1:n_draws) {
@@ -83,10 +83,12 @@ for(i in 1:n_draws) {
   u_draws[i,] = u
 }
 
-# # Predict as y_i = 1 if u_i > 0, else y_i = 0
-# y_pred = rep(0, n_samples)
-# y_pred[colMeans(u_draws) > 0] = 1
+# Avoid first 10% of the draws
+burn_in = floor(n_draws / 10)
+beta_draws = beta_draws[burn_in:nrow(beta_draws),]
 
+beta_mean = colMeans(beta_draws)
+beta_cov = cov(beta_draws)
 
 # -----
 #  (c)
@@ -157,9 +159,7 @@ get_pred = function(beta){
   y_draw = rbern(n=1, prob=p)
 }
 
-# Avoid first 10% of the draws
-burn_in = floor(nrow(beta_draws) / 10)
-
+n_draws = 100
 y_draws_2 = c() # As in lab 2
 y_draws_3 = c() # As in lab 3
 for (i in burn_in:nrow(beta_draws)){
@@ -169,16 +169,19 @@ for (i in burn_in:nrow(beta_draws)){
   y_draws_2 = c(y_draws_2, y_draw)
 
   # Get prediction according to lab 3
-  beta2 = beta_draws[i,]
-  y_draw = get_pred(beta2)
+  beta2 = as.vector(rmvnorm(n=1, mean=beta_mean, sigma=beta_cov))
+  y_draw = get_pred(beta1)
   y_draws_3 = c(y_draws_3, y_draw)
 }
+
+pdf("plots/3_2_3_pred_distr_comp.pdf", width=grid_w, height=grid_h)
 
 prob_density = density(y_draws_2)
 plot(prob_density,
      type="l",
      lwd=2,
      xlim=c(0,1),
+     ylim=c(0,2.5),
      ylab="Density",
      xlab="y (0 = not working, 1 = working)",
      main="Predictive distribution for sample",
@@ -194,3 +197,5 @@ legend("topright",
        legend = c("Normal Approximation","Gibbs Probit"),
        fill = c("black", "gray"),
        inset = 0.02)
+
+dev.off()
