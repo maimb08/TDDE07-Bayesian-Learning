@@ -2,8 +2,8 @@ require(mvtnorm)
 require(msm)
 library(LaplacesDemon)
 
-grid_w = 5
-grid_h = 4
+grid_w = 6
+grid_h = 5
 
 # -------
 #  Lab 3
@@ -59,10 +59,10 @@ draw_u = function(beta) {
     y_i = y[i]
     
     if(y_i == 0){
-      # Truncate [-inf, 0]
+      # Truncate [-inf, 0)
       u[i] = rtnorm(n=1, mean=regr_mean[i], sd=1, upper=0)
     }else{
-      # Truncate [0, inf]
+      # Truncate (0, inf]
       u[i] = rtnorm(n=1, mean=regr_mean[i], sd=1, lower=0)
     }
   }
@@ -133,23 +133,14 @@ post_mode = opt_results$par
 post_cov = -solve(opt_results$hessian)
 
 # Sample to predict
-constant = 1
-husband = 10
-edu_years = 8
-exp_years1 = 10
-exp_years2 = (exp_years1/10)^2
-age = 40
-n_small_child = 1
-n_big_child = 1
-
-sample = c(constant,
-           husband,
-           edu_years,
-           exp_years1,
-           exp_years2,
-           age,
-           n_small_child,
-           n_big_child)
+sample = c(constant=1,
+           husband=10,
+           edu_years=8,
+           exp_years1=10,
+           exp_years2=(10/10^2),
+           age=40,
+           n_small_child=1,
+           n_big_child=1)
 
 get_pred = function(beta){
   e = exp(sample%*%beta)
@@ -162,7 +153,7 @@ get_pred = function(beta){
 n_draws = 100
 y_draws_2 = c() # As in lab 2
 y_draws_3 = c() # As in lab 3
-for (i in burn_in:nrow(beta_draws)){
+for (i in 1:n_draws){
   # Get prediction according to lab 2
   beta1 = as.vector(rmvnorm(n=1, mean=post_mode, sigma=post_cov))
   y_draw = get_pred(beta1)
@@ -183,7 +174,7 @@ plot(prob_density,
      xlim=c(0,1),
      ylim=c(0,2.5),
      ylab="Density",
-     xlab="y (0 = not working, 1 = working)",
+     xlab="Prediction (0 = not working, 1 = working)",
      main="Predictive distribution for sample",
      col="black",
      cex.main=.9,

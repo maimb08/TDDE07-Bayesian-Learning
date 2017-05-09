@@ -151,7 +151,9 @@ for (i in 1:nIter){
 # Plots displaying convergence of the Normal hyper 
 # parameters during sampling
 
-pdf("plots/3_1_2_conv_mixt_mu.pdf", width=grid_w, height=grid_h)
+pdf("plots/3_1_2_mixt_conv.pdf")
+
+par(mfrow=c(2,1))
 
 # Plot the auto correlation (convergence) between draws of mu
 min_t = min(c(min(t1), min(t2)))
@@ -162,8 +164,8 @@ plot(t1,
      cex=.1,
      lwd=2,
      main=expression(paste("Convergence of Gibbs Sampling ", "(", theta, ")", sep=" ")),
-     xlab="Batches of draws",
-     ylab=expression(paste("Mean of batches of sequential draws of ", theta, sep=" ")))
+     xlab="Batches of sequential draws",
+     ylab=expression(paste("Mean of seq. draws of ", theta, sep=" ")))
 
 lines(t2, lwd=2, col="gray")
 
@@ -174,11 +176,6 @@ legend("topright",
        col=c("black","gray"), 
        lwd = 2)
 
-dev.off()
-
-
-pdf("plots/3_1_2_conv_mixt_sigma.pdf", width=grid_w, height=grid_h)
-
 # Plot the auto correlation (convergence) between draws of sigma
 min_s = min(c(min(s1), min(s2)))
 max_s = max(c(max(s1), max(s2)))
@@ -188,8 +185,8 @@ plot(s1,
      cex=.1,
      lwd=2,
      main=expression(paste("Convergence of Gibbs Sampling ", "(", sigma^2, ")", sep=" ")),
-     xlab="Batches of draws",
-     ylab=expression(paste("Mean of batches of sequential draws of ", sigma^2, sep=" ")))
+     xlab="Batches of sequential draws",
+     ylab=expression(paste("Mean of seq. draws of ", sigma^2, sep=" ")))
 
 lines(s2, lwd=2, col="gray")
 
@@ -202,13 +199,15 @@ legend("topright",
 
 dev.off()
 
+grid_w = 6
+grid_h = 5
 
 pdf("plots/3_1_3_mixt_norm.pdf", width=grid_w, height=grid_h)
 
-hist(x, breaks = 20, cex=.1, freq = FALSE, xlim = c(xGridMin,xGridMax), xlab="Precipitation", ylab="Density", main = "Rainfall: Mixture of Normals")
-lines(xGrid, mixDensMean, type = "l", lwd = 2, lty = 4, col = "red")
-lines(xGrid, dnorm(xGrid, mean = mean(x), sd = apply(x,2,sd)), type = "l", lwd = 2, col = "blue")
-legend("topright", box.lty = 1, legend = c("Data histogram","Mixture density","Normal density"), col=c("black","red","blue"), lwd = 2)
+hist(x, breaks = 20, cex=.1, border="lightgray", freq = FALSE, xlim = c(xGridMin,xGridMax), xlab="Precipitation", ylab="Density", main = "Rainfall: Mixture of Normals")
+lines(xGrid, mixDensMean, type = "l", lwd = 2, lty = 4, col = "black")
+lines(xGrid, dnorm(xGrid, mean = mean(x), sd = apply(x,2,sd)), type = "l", lwd = 2, col = "gray")
+legend("topright", box.lty = 1, legend = c("Data histogram","Mixture density","Normal density"), col=c("lightgray","black","gray"), lwd = 2)
 
 dev.off()
 

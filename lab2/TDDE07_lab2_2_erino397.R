@@ -94,24 +94,14 @@ dev.off()
 # (c)
 
 # Sample to predict
-constant = 1
-husband = 10
-edu_years = 8
-exp_years1 = 10
-exp_years2 = (exp_years1/10)^2
-age = 40
-n_small_child = 1
-n_big_child = 1
-
-
-sample = c(constant,
-           husband,
-           edu_years,
-           exp_years1,
-           exp_years2,
-           age,
-           n_small_child,
-           n_big_child)
+sample = c(constant=1,
+           husband=10,
+           edu_years=8,
+           exp_years1=10,
+           exp_years2=(10/10^2),
+           age=40,
+           n_small_child=1,
+           n_big_child=1)
 
 y_draws = c()
 n_draws = 1000
@@ -138,7 +128,7 @@ plot(prob_density,
      lwd=2, 
      xlim=c(0,1), 
      ylab="Density", 
-     xlab="y (0 = not working, 1 = working)", 
+     xlab="Prediction (0 = not working, 1 = working)", 
      main="Predictive distribution for sample",
      cex.main=.9, 
      cex.lab=.9, 
