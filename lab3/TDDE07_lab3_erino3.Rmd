@@ -39,7 +39,7 @@ $\pagebreak$
 ## 2. Probit regression
 ### (c)
 
-![Comparison between predictive distribution of a normal approximation and the predictive distribution of probit regression gained by Gibbs sampling](plots/3_2_3_pred_distr_comp.pdf)
+![Comparison between the normal approximation of the probability distribution for each parameter and the histogram of the draws for those parameters during Gibbs sampling done in 1a](plots/3_2_3_norm_gibbs_comp.pdf)
 
 $\pagebreak$
 
@@ -215,6 +215,7 @@ $\pagebreak$
 ```{r, echo=TRUE, eval=FALSE}
 require(mvtnorm)
 require(msm)
+require(MASS)
 library(LaplacesDemon)
 
 grid_w = 6
@@ -227,6 +228,8 @@ grid_h = 5
 
 # Read data
 data <- read.table("./data/WomenWork.dat", header = TRUE)
+
+feature_labels = colnames(data)
 
 y <- as.vector(data$Work)
 X <- as.matrix(data[, 2:ncol(data)])
@@ -288,7 +291,7 @@ draw_u = function(beta) {
 # Initial prediction
 u = rnorm(n_samples, covar0)
 
-n_draws = 500
+n_draws = 1500
 beta_draws = matrix(0, n_draws, n_features)
 u_draws = matrix(0, n_draws, n_samples)
 for(i in 1:n_draws) {
@@ -301,9 +304,6 @@ for(i in 1:n_draws) {
 # Avoid first 10% of the draws
 burn_in = floor(n_draws / 10)
 beta_draws = beta_draws[burn_in:nrow(beta_draws),]
-
-beta_mean = colMeans(beta_draws)
-beta_cov = cov(beta_draws)
 
 # -----
 #  (c)
@@ -347,64 +347,41 @@ post_mode = opt_results$par
 # Posterior covariance (J^-1(beta hat))
 post_cov = -solve(opt_results$hessian)
 
-# Sample to predict
-sample = c(constant=1,
-           husband=10,
-           edu_years=8,
-           exp_years1=10,
-           exp_years2=(10/10^2),
-           age=40,
-           n_small_child=1,
-           n_big_child=1)
+pdf("plots/3_2_3_norm_gibbs_comp.pdf")
 
-get_pred = function(beta){
-  e = exp(sample%*%beta)
-  # Calculate the probability (bernoulli parameter)
-  p = e / (1 + e)
-  # Draw a y prediction
-  y_draw = rbern(n=1, prob=p)
+par(mfrow=c(4,2))
+
+beta_grid = seq(-1.5, 1.5, 0.001)
+for (i in 1:n_features) {
+  
+  # Build histogram of Gibbs draws of beta_i
+  h = hist(beta_draws[,i], breaks=20, plot=FALSE)
+  
+  # Get the normal approximation for beta_i via optim.
+  mean = post_mode[i]
+  std_dev = sqrt(post_cov[i,i]/n_features)
+  norm_approx = dnorm(x=beta_grid, mean=mean, sd=std_dev)
+  
+  # Find x- and y-limits for plot
+  min_x = min(c(min(beta_draws[,i]), mean-4*std_dev))
+  max_x = max(c(max(beta_draws[,i]), mean+4*std_dev))
+  max_y = max(c(max(norm_approx), max(h$density)))
+  
+  # Plot the histogram
+  plot(h,
+       freq=FALSE,
+       xlim=c(min_x,max_x), 
+       ylim=c(0,max_y),
+       border="gray",
+       xlab=expression(theta),
+       main=feature_labels[i+1])
+  
+  # Plot the normal approximation
+  lines(beta_grid, norm_approx)
 }
-
-n_draws = 100
-y_draws_2 = c() # As in lab 2
-y_draws_3 = c() # As in lab 3
-for (i in 1:n_draws){
-  # Get prediction according to lab 2
-  beta1 = as.vector(rmvnorm(n=1, mean=post_mode, sigma=post_cov))
-  y_draw = get_pred(beta1)
-  y_draws_2 = c(y_draws_2, y_draw)
-
-  # Get prediction according to lab 3
-  beta2 = as.vector(rmvnorm(n=1, mean=beta_mean, sigma=beta_cov))
-  y_draw = get_pred(beta1)
-  y_draws_3 = c(y_draws_3, y_draw)
-}
-
-pdf("plots/3_2_3_pred_distr_comp.pdf", width=grid_w, height=grid_h)
-
-prob_density = density(y_draws_2)
-plot(prob_density,
-     type="l",
-     lwd=2,
-     xlim=c(0,1),
-     ylim=c(0,2.5),
-     ylab="Density",
-     xlab="Prediction (0 = not working, 1 = working)",
-     main="Predictive distribution for sample",
-     col="black",
-     cex.main=.9,
-     cex.lab=.9,
-     cex.axis=.8)
-
-prob_density = density(y_draws_3)
-lines(prob_density, col="gray", lwd=2)
-
-legend("topright", 
-       legend = c("Normal Approximation","Gibbs Probit"),
-       fill = c("black", "gray"),
-       inset = 0.02)
 
 dev.off()
+
 ```
 
 $\pagebreak$
