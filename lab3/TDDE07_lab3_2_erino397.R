@@ -102,7 +102,8 @@ LogPosteriorProbit <- function(betas, y, X, mu, Sigma){
   predictions <- X%*%betas;
   
   # Log likelihood (for probit)                             
-  log_likelihood = sum(y*pnorm(predictions, log.p = TRUE) + (1-y)*pnorm(predictions, log.p = TRUE, lower.tail = FALSE))
+  log_likelihood = sum(y*pnorm(predictions, log.p = TRUE) + 
+                         (1-y)*pnorm(predictions, log.p = TRUE, lower.tail = FALSE))
   
   # Log prior
   log_prior <- dmvnorm(betas, mu0, covar0, log=TRUE);
@@ -140,7 +141,7 @@ beta_grid = seq(-1.5, 1.5, 0.001)
 for (i in 1:n_features) {
   
   # Build histogram of Gibbs draws of beta_i
-  h = hist(beta_draws[,i], breaks=20, plot=FALSE)
+  h = hist(beta_draws[,i], breaks=30, plot=FALSE)
   
   # Get the normal approximation for beta_i via optim.
   mean = post_mode[i]

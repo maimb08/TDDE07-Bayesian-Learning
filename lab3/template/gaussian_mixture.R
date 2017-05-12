@@ -1,3 +1,9 @@
+
+# -----------------------------
+#  Lab 3 - Assignment 2 (b)
+# -----------------------------
+
+
 # Estimating a simple mixture of normals
 # Author: Mattias Villani, IDA, Linköping University. http://mattiasvillani.com
 
@@ -42,11 +48,13 @@ rDirichlet <- function(param){
   for (j in 1:nCat){
     thetaDraws[j] <- rgamma(1,param[j],1)
   }
-  thetaDraws = thetaDraws/sum(thetaDraws) # Diving every column of ThetaDraws by the sum of the elements in that column.
+  # Diving every column of ThetaDraws by the sum of the elements in that column.
+  thetaDraws = thetaDraws/sum(thetaDraws) 
   return(thetaDraws)
 }
 
-# Simple function that converts between two different representations of the mixture allocation
+# Simple function that converts between two different 
+# representations of the mixture allocation
 S2alloc <- function(S){
   n <- dim(S)[1]
   alloc <- rep(0,n)
@@ -58,7 +66,8 @@ S2alloc <- function(S){
 
 # Initial value for the MCMC
 nObs <- length(x)
-S <- t(rmultinom(nObs, size = 1 , prob = rep(1/nComp,nComp))) # nObs-by-nComp matrix with component allocations.
+# nObs-by-nComp matrix with component allocations.
+S <- t(rmultinom(nObs, size = 1 , prob = rep(1/nComp,nComp))) 
 theta <- quantile(x, probs = seq(0,1,length = nComp))
 sigma2 <- rep(var(x),nComp)
 probObsInComp <- rep(NA, nComp)
@@ -75,7 +84,9 @@ gibbs_thetas = matrix(0,nIter,2)
 gibbs_sigmas = matrix(0,nIter,2)
 for (k in 1:nIter){
   message(paste('Iteration number:',k))
-  alloc <- S2alloc(S) # Just a function that converts between different representations of the group allocations
+  # Just a function that converts between different representations 
+  # of the group allocations
+  alloc <- S2alloc(S) 
   nAlloc <- colSums(S)
   print(nAlloc)
   # Update components probabilities
@@ -96,7 +107,9 @@ for (k in 1:nIter){
   
   # Update sigma2's
   for (j in 1:nComp){
-    sigma2[j] <- rScaledInvChi2(1, df = nu0[j] + nAlloc[j], scale = (nu0[j]*sigma2_0[j] + sum((x[alloc == j] - theta[j])^2))/(nu0[j] + nAlloc[j]))
+    sigma2[j] <- rScaledInvChi2(1, df = nu0[j] + nAlloc[j], 
+       scale = (nu0[j]*sigma2_0[j] + 
+                  sum((x[alloc == j] - theta[j])^2))/(nu0[j] + nAlloc[j]))
   }
   
   gibbs_sigmas[k,] = sigma2
@@ -112,7 +125,8 @@ for (k in 1:nIter){
   # Printing the fitted density against data histogram
   if (plotFit && (k%%1 ==0)){
     effIterCount <- effIterCount + 1
-    hist(x, breaks = 20, freq = FALSE, xlim = c(xGridMin,xGridMax), main = paste("Iteration number",k), ylim = ylim)
+    hist(x, breaks = 20, freq = FALSE, xlim = c(xGridMin,xGridMax), 
+         main = paste("Iteration number",k), ylim = ylim)
     mixDens <- rep(0,length(xGrid))
     components <- c()
     for (j in 1:nComp){
@@ -151,9 +165,40 @@ for (i in 1:nIter){
 # Plots displaying convergence of the Normal hyper 
 # parameters during sampling
 
-pdf("plots/3_1_2_mixt_conv.pdf")
+pdf("plots/3_1_2_gibbs_mixt.pdf")
 
-par(mfrow=c(2,1))
+par(mfrow=c(3,1))
+
+# Plot comparison between kernel density, mixture of normals and a normal
+# approximation
+hist(x, breaks = 20, 
+     cex=.1, 
+     border="lightgray", 
+     freq = FALSE, 
+     xlim = c(xGridMin,xGridMax), 
+     xlab="Precipitation", 
+     ylab="Density", 
+     main = "Rainfall: Mixture of Normals")
+
+lines(xGrid, 
+      mixDensMean, 
+      type = "l", 
+      lwd = 2, 
+      lty = 4, 
+      col = "black")
+
+lines(xGrid, 
+      dnorm(xGrid, mean = mean(x), sd = apply(x,2,sd)), 
+      type = "l", 
+      lwd = 2, 
+      col = "gray")
+
+legend("topright", 
+       box.lty = 1, 
+       legend = c("Data histogram","Mixture density","Normal density"), 
+       col=c("lightgray","black","gray"), 
+       lwd = 2)
+
 
 # Plot the auto correlation (convergence) between draws of mu
 min_t = min(c(min(t1), min(t2)))
@@ -163,7 +208,9 @@ plot(t1,
      ylim=c(min_t, max_t), 
      cex=.1,
      lwd=2,
-     main=expression(paste("Convergence of Gibbs Sampling ", "(", theta, ")", sep=" ")),
+     main=expression(
+       paste("Convergence of Gibbs Sampling ", "(", theta, ")", sep=" ")
+       ),
      xlab="Batches of sequential draws",
      ylab=expression(paste("Mean of seq. draws of ", theta, sep=" ")))
 
@@ -184,7 +231,9 @@ plot(s1,
      ylim=c(min_s, max_s), 
      cex=.1,
      lwd=2,
-     main=expression(paste("Convergence of Gibbs Sampling ", "(", sigma^2, ")", sep=" ")),
+     main=expression(
+       paste("Convergence of Gibbs Sampling ", "(", sigma^2, ")", sep=" ")
+       ),
      xlab="Batches of sequential draws",
      ylab=expression(paste("Mean of seq. draws of ", sigma^2, sep=" ")))
 
@@ -197,18 +246,7 @@ legend("topright",
        col=c("black","gray"), 
        lwd = 2)
 
-dev.off()
-
-grid_w = 6
-grid_h = 5
-
-pdf("plots/3_1_3_mixt_norm.pdf", width=grid_w, height=grid_h)
-
-hist(x, breaks = 20, cex=.1, border="lightgray", freq = FALSE, xlim = c(xGridMin,xGridMax), xlab="Precipitation", ylab="Density", main = "Rainfall: Mixture of Normals")
-lines(xGrid, mixDensMean, type = "l", lwd = 2, lty = 4, col = "black")
-lines(xGrid, dnorm(xGrid, mean = mean(x), sd = apply(x,2,sd)), type = "l", lwd = 2, col = "gray")
-legend("topright", box.lty = 1, legend = c("Data histogram","Mixture density","Normal density"), col=c("lightgray","black","gray"), lwd = 2)
 
 dev.off()
 
-#########################    Helper functions    ##############################################
+#########################    Helper functions    #######################

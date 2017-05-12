@@ -4,13 +4,17 @@ require(geoR)
 grid_w = 5
 grid_h = 4
 
-# Lab 3 - Assignment 1
+# ----------------------
+#  Lab 3 - Assignment 1
+# ----------------------
 
 data = read.table("data/rainfall.txt", header=FALSE)[,1]
 
 n = length(data)
 
-# (a)
+# -----
+#  (a)
+# -----
 
 pdf("plots/3_1_1_precipitation.pdf")
 
@@ -111,12 +115,11 @@ plot(mean_vars,
 
 dev.off()
 
-# (c)
+# -----
+#  (b)
+# -----
 
-# Kernel density estimate
-pdf("plots/3_1_3_dens_comp.pdf")
-
-par(mfrow=c(3,1))
+pdf("plots/3_1_3_dens_comp.pdf", height=grid_h)
 
 kernel_density = density(data)
 
@@ -129,32 +132,46 @@ plot(kernel_density$x,
      xlab="Precipitation",
      main="Rainfall: Kernel density estimate")
 
-# Normal density from (a)
+col1 = rgb(240, 240, 240, maxColorValue=255)
+col1_b = "lightgray"
+col2 = "black"
+col3 = "black"
 
-mean = mean(mean_draws)
-std_dev = sqrt(mean(var_draws)/n)
+# Kernel density
+polygon(kernel_density$x, 
+        kernel_density$y,
+        col=col1,
+        border=col1_b,
+        lwd=2)
 
-x_grid = seq(mean - 2, mean + 2, 0.0001)
-
-normal_density = dnorm(x_grid, mean=mean, sd=std_dev)
-
-plot(x_grid, 
-     normal_density, 
-     type="l",
-     cex=.1,
-     lwd=2,
-     ylab="Density",
-     xlab="Precipitation",
-     main="Rainfall: Normal density")
 
 # Mixture of normals from (b)
 # (run './template/gaussian_mixture.R' first)
+lines(xGrid, 
+      mixDensMean, 
+      type="l", 
+      lwd=2,
+      col=col2)
 
-hist(x, breaks = 20, cex=.1, border="lightgray", freq = FALSE, xlim = c(xGridMin,xGridMax), xlab="Precipitation", ylab="Density", main = "Rainfall: Mixture of Normals")
-lines(xGrid, mixDensMean, type = "l", lwd = 2, lty = 4, col = "black")
-lines(xGrid, dnorm(xGrid, mean = mean(x), sd = apply(x,2,sd)), type = "l", lwd = 2, col = "gray")
-legend("topright", box.lty = 1, legend = c("Data histogram","Mixture density","Normal density"), col=c("lightgray","black","gray"), lwd = 2)
+
+# Normal density
+mean = mean(mean_draws)
+std_dev = sqrt(mean(var_draws))
+normal_density = dnorm(xGrid, mean=mean, sd=std_dev)
+
+lines(xGrid, 
+      normal_density, 
+      col=col3,
+      lwd=2,
+      lty=2)
+
+
+legend("topright", 
+       box.lty = 0, 
+       legend = c("Kernel Density","Mixture density","Normal density"), 
+       col=c(col1_b, col2, col3), 
+       lty=c(1,1,2),
+       lwd=2)
 
 
 dev.off()
-
