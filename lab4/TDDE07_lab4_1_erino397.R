@@ -1,8 +1,8 @@
 require(MASS)
 require(geoR)
 
-grid_w = 5
-grid_h = 5
+grid_w = 7
+grid_h = 4
 
 # -------
 #  Lab 4
@@ -27,7 +27,7 @@ X_X = t(X)%*%X
 
 glm_model = glm(nBids ~ 0 + ., data = data, family = poisson)
 
-pdf("./plots/4_1_1_mle_beta.pdf", height=grid_h)
+pdf("./plots/4_1_1_mle_beta.pdf", width=grid_w, height=grid_h)
 
 par(mfrow=c(2,4), oma = c(0, 0, 3, 0))
 for (i in 2:ncol(X)){
@@ -37,12 +37,11 @@ for (i in 2:ncol(X)){
   plot(x_grid,
        dnorm(x_grid, mean=mean, sd=std_dev),
        type="l",
-       lwd=2,
        ylab="Density",
        xlab=expression(beta),
        main=feature_labels[i])
 }
-title("Normal approximation of beta", outer=TRUE, cex=1.5)
+title("Normal approximation of MLE of beta", outer=TRUE, cex=1.5)
 
 dev.off()
 
