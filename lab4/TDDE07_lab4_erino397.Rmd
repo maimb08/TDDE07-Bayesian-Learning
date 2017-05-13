@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 ## 1. Poisson regression - the MCMC way.
 ### (a)
-The MLE of $\beta$ can be seen in Table 1. Significant covariates are MinBidShare, Sealed, VerifyID and MajBlem.
+The MLE of $\beta$ can be seen in Table 1. Significant covariates are MinBidShare, Sealed, VerifyID and MajBlem. In Figure 1 I have plotted the normal approximation of the MLE of $\beta$ with uncertainty.
 
 ``` {r, echo=FALSE, eval=TRUE, results='asis', message=FALSE}
 require(MASS)
@@ -22,10 +22,10 @@ data = read.table("data/eBayNumberOfBidderData.dat", header=TRUE)
 
 glm_model = glm(nBids ~ 0 + ., data = data, family = poisson)
 
-feature_labels = colnames(data)[3:length(colnames(data))]
-
 options(xtable.comment=FALSE)
 print(xtable(t(as.matrix(glm_model$coefficients)), caption='MLE of beta'), type='latex')
 ```
+
+![Normal approximation of MLE of $\beta$](plots/4_1_1_mle_beta.pdf)
 
 ### (b)
