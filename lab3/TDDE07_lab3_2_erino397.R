@@ -16,8 +16,8 @@ data <- read.table("./data/WomenWork.dat", header = TRUE)
 
 feature_labels = colnames(data)
 
-y <- as.vector(data$Work)
-X <- as.matrix(data[, 2:ncol(data)])
+y = as.vector(data$Work)
+X = as.matrix(data[, 2:ncol(data)])
 
 # Data spec.
 n_features = ncol(X)

@@ -1,0 +1,31 @@
+---
+title: "TDDE07 Bayesian Learning - Lab 4"
+author: "Erik Linder-Norén - erino397"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document: default
+  word_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+## 1. Poisson regression - the MCMC way.
+### (a)
+The MLE of $\beta$ can be seen in Table 1. Significant covariates are MinBidShare, Sealed, VerifyID and MajBlem.
+
+``` {r, echo=FALSE, eval=TRUE, results='asis', message=FALSE}
+require(MASS)
+require(geoR)
+library(xtable)
+
+data = read.table("data/eBayNumberOfBidderData.dat", header=TRUE)
+
+glm_model = glm(nBids ~ 0 + ., data = data, family = poisson)
+
+feature_labels = colnames(data)[3:length(colnames(data))]
+
+options(xtable.comment=FALSE)
+print(xtable(t(as.matrix(glm_model$coefficients)), caption='MLE of beta'), type='latex')
+```
+
+### (b)

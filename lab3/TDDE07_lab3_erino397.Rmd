@@ -1,7 +1,7 @@
 ---
 title: "TDDE07 Bayesian Learning - Lab 3"
 author: "Erik Linder-Norén - erino397"
-date: '2017-05-09'
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   pdf_document: default
   word_document: default
