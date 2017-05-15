@@ -87,7 +87,7 @@ post_cov = -solve(opt_results$hessian)
 
 
 # -----
-#  (b)
+#  (c)
 # -----
 
 Sigma = post_cov
@@ -150,7 +150,42 @@ for (i in 2:ncol(X)){
        main=feature_labels[i])
   lines(x_grid, rep(beta_means[i], length(x_grid)), col="black")
 }
-title("Convergence of theta during Metropolis Hastings", outer=TRUE, cex=1.5)
+title("Convergence of beta during Metropolis Hastings", outer=TRUE, cex=1.5)
 
 dev.off()
 
+# -----
+#  (d)
+# -----
+
+sample = c(
+  Constant = 1,
+  PowerSeller = 1,
+  VerifyID = 1,
+  Sealed = 1,
+  MinBlem = 0,
+  MajBlem = 0,
+  LargNeg = 0,
+  LogBook = 1,
+  MinBidShare = 0.5
+)
+
+lambda = exp(sample%*%t(beta_draws))
+
+pred_draws = rpois(10000, lambda)
+
+# Probability that the sample has 0 bidders
+prob = length(pred_draws[pred_draws == 0]) / length(pred_draws)
+
+# Plot the predictive distribution
+plot(hist(pred_draws, right=FALSE),
+     freq=FALSE,
+     xaxt="n",
+     xlab="Number of bidders",
+     ylab="Density",
+     main="Predictive distribution of sample")
+
+axis(1, 
+     at=0:max(pred_draws), 
+     labels=0:max(pred_draws)
+  )
