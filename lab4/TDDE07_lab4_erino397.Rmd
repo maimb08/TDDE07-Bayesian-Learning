@@ -11,23 +11,73 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 ## 1. Poisson regression - the MCMC way.
 ### (a)
-In Figure 1 I have plotted the normal approximation of the MLE of $\beta$ with uncertainty. The MLE of $\beta$ can be seen in Table 1. Significant covariates are MinBidShare, Sealed, VerifyID and MajBlem.
+In Figure 1 I have plotted the normal approximation of $\beta_{MLE}$ with uncertainty. The $\beta_{MLE}$ can be seen in Table 1. Significant covariates are MinBidShare, Sealed, VerifyID and MajBlem.
 
-![Normal approximation of MLE of $\beta$](plots/4_1_1_mle_beta.pdf)
+![Normal approximation of MLE of beta](plots/4_1_1_mle_beta.pdf)
 
 ``` {r, echo=FALSE, eval=TRUE, results='asis', message=FALSE}
 require(MASS)
 require(geoR)
 library(xtable)
+require(mvtnorm)
 
 data = read.table("data/eBayNumberOfBidderData.dat", header=TRUE)
+
+n = length(data)
+n_features = ncol(data) - 1 # Except y and const
+
+feature_labels = colnames(data[,2:ncol(data)])
+  
+y = data$nBids
+X = as.matrix(data[,2:ncol(data)])
+
+X_X = t(X)%*%X
 
 glm_model = glm(nBids ~ 0 + ., data = data, family = poisson)
 
 options(xtable.comment=FALSE)
-print(xtable(t(as.matrix(glm_model$coefficients)), caption='MLE of beta'), type='latex')
+print(xtable(t(as.matrix(glm_model$coefficients)), digits=rep(3, n_features+1), caption='MLE of beta'), type='latex')
 ```
 
 
-
 ### (b)
+By numerical optimization I determined the $\beta_{MLE}$ coefficients to be the values seen in Figure 2. They closely resemble the values in the GLM model in (a).
+
+``` {r, echo=FALSE, eval=TRUE, results='asis', message=FALSE}
+# Beta prior (Zellner’s g-prior)
+mu0 = rep(0, n_features)
+covar0 = 100 * ginv(X_X)
+init_beta = mvrnorm(n=1, mu0, covar0)
+
+# This is the log of the Poisson model
+logPostPoiNorm <- function(betas, X, y){
+  
+  log_prior = dmvnorm(betas, mu0, covar0, log=TRUE)
+  
+  lambda = exp(X%*%betas)
+  
+  # Assume independence among samples and take the sum of
+  # log(p(y_i|lambda)), where lambda is exp(X.dot(beta)) and p ~ Poisson
+  log_lik = sum(dpois(y, lambda, log=TRUE))
+  
+  return (log_lik + log_prior)
+}
+
+log_post = logPostPoiNorm
+
+opt_results = optim(init_beta,
+                    log_post,
+                    gr=NULL,
+                    X,
+                    y,
+                    method=c("BFGS"),
+                    control=list(fnscale=-1),
+                    hessian=TRUE)
+
+# MLE beta
+post_mode = opt_results$par
+# Covariance (J^-1(beta hat))
+names(post_mode) = names(glm_model$coefficients)
+options(xtable.comment=FALSE)
+print(xtable(t(as.matrix(post_mode)), digits=rep(3, n_features+1), caption='MLE of beta by numerical optimization'), type='latex')
+```
