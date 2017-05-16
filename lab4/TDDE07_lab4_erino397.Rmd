@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 ## 1. Poisson regression - the MCMC way.
 ### (a)
-In Figure 1 I have plotted the normal approximation of $\beta_{MLE}$ with uncertainty. The $\beta_{MLE}$ can be seen in Table 1. Significant covariates are MinBidShare, Sealed, VerifyID and MajBlem.
+The $\beta_{MLE}$ found by fitting a Poisson regression model with glm can be seen in Table 1. Significant covariates are MinBidShare, Sealed, VerifyID and MajBlem.
 
 ``` {r, echo=FALSE, eval=TRUE, results='asis', message=FALSE}
 require(MASS)
@@ -41,7 +41,7 @@ print(xtable(t(as.matrix(glm_model$coefficients)), digits=rep(3, n_features+1), 
 
 
 ### (b)
-By numerical optimization I determined the $\beta_{MLE}$ coefficients to be the values seen in Figure 2. They closely resemble the values in the GLM model in (a). My implementation of the log of the poisson model with a normal prior can be found in Appendix A.
+By approximating the posterior distribution of beta as a multivariate normal and determining the value for $\beta_{MLE}$ by numerical optimization I got the values seen in Figure 2. They closely resemble the values I got by fitting a Poisson regression model using glm in (a). My implementation of the log of the poisson model with a normal prior can be found in Appendix A.
 
 ``` {r, echo=FALSE, eval=TRUE, results='asis', message=FALSE}
 # Beta prior (Zellner’s g-prior)
@@ -82,13 +82,13 @@ post_cov = -solve(opt_results$hessian)
 # Table 2
 names(post_mode) = names(glm_model$coefficients)
 options(xtable.comment=FALSE)
-print(xtable(t(as.matrix(post_mode)), digits=rep(3, n_features+1), caption='MLE of beta by numerical optimization (normal approximation)'), type='latex')
+print(xtable(t(as.matrix(post_mode)), digits=rep(3, n_features+1), caption='MLE of beta by numerical optimization'), type='latex')
 ```
 
 
 ### (c)
 After having implemented the Metropolis Hastings simulation method and simulated 20000 draws from the posterior distribution from (b)
-I set the $\beta$ values as the mean of the draws, while ommitting the first 10% of the draws because of the burn-in. These values
+I calculated the $\beta$ coefficients as the mean of the draws, while omitting the first 10% of the draws because of the burn-in phase. These values
 can be seen in Table 3.
 
 ``` {r, echo=FALSE, eval=TRUE, results='asis', message=FALSE}
@@ -169,8 +169,8 @@ prob = length(pred_draws[pred_draws == 0]) / length(pred_draws)
 
 ```
 
-The convergergence of the parameters can be seen in Figure 1, where I have taken the mean value of every sequental beta drawn from the posterior and
-plotted it to visualize the auto-correlation between draws, and to see how the beta drawn asymptotically approaches somewhat stationary values. 
+The convergence of the parameters can be seen in Figure 1, where I have taken the mean value of every two sequental beta drawn from the posterior and
+plotted it to visualize the auto-correlation between draws, and to see how the draws asymptotically approaches somewhat stationary values. 
 My implementation of the Metropolis Hastings algorithm can be found in Appendix A.
 
 $\pagebreak$
@@ -180,8 +180,7 @@ $\pagebreak$
 $\pagebreak$
 
 ### (d)
-After having determined the predictive distribution of the sample $\hat{y}$ as $p(\hat{y}|\lambda)\sim{Poisson(\lambda)}$, where $\lambda=e^{\hat{X}\beta}$ using the betas draws during the simulation in (c), I got the distribution seen in Figure 2. 
-The probability that the sample has zero bidders by this distribution was $p(0|\lambda)\approx0.36$.
+After having determined the predictive distribution of the sample $\hat{y}$ as $p(\hat{y}|\lambda)\sim{Poisson(\lambda)}$, where $\lambda=e^{\hat{X}\beta}$ using the betas draws during the simulation in (c) and $\hat{X}$ as the sample to predict, I got the distribution seen in Figure 2. The probability that the sample has zero bidders by this distribution was $p(\hat{y}=0|\lambda)\approx0.36$.
 
 ![Predictive distribution of sample](./plots/4_1_3_pred_distr.pdf)
 

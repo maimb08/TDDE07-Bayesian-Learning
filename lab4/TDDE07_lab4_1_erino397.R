@@ -172,7 +172,6 @@ lambda = exp(beta_draws%*%sample)
 
 pred_draws = rpois(10000, lambda)
 
-
 # Probability that the sample has 0 bidders
 prob = length(pred_draws[pred_draws == 0]) / length(pred_draws)
 
