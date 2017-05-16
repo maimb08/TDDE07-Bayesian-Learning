@@ -3,9 +3,6 @@ require(geoR)
 require(mvtnorm)
 require(LaplacesDemon)
 
-grid_w = 7
-grid_h = 4
-
 # -------
 #  Lab 4
 # -------
@@ -29,10 +26,11 @@ X_X = t(X)%*%X
 
 glm_model = glm(nBids ~ 0 + ., data = data, family = poisson)
 
-pdf("./plots/4_1_1_mle_beta.pdf", width=grid_w, height=grid_h)
+pdf("./plots/4_1_1_mle_beta.pdf", width=7, height=7)
 
-par(mfrow=c(2,4), oma = c(0, 0, 3, 0))
-for (i in 2:ncol(X)){
+par(oma = c(0, 0, 3, 0))
+layout(matrix(c(0,1,1,0,2,3,4,5,6,7,8,9), 3, 4, byrow = TRUE))
+for (i in 1:ncol(X)){
   mean = glm_model$coefficients[i]
   std_dev = summary(glm_model)[["coefficients"]][,2][i]
   x_grid = seq(mean-4*std_dev, mean+4*std_dev, 0.001)
@@ -91,9 +89,9 @@ post_cov = -solve(opt_results$hessian)
 # -----
 
 Sigma = post_cov
-c = 0.5
+c = .5
 
-n_draws = 5000
+n_draws = 20000
 
 metropolisHastings = function(logPostFunc, theta, c, ...){
   theta_draws = matrix(0, n_draws, length(theta))
@@ -136,11 +134,12 @@ beta_draws = beta_draws[burn_in:nrow(beta_draws),]
 
 beta_means = colMeans(beta_draws)
 
-pdf("./plots/4_1_3_beta_conv.pdf", width=grid_w, height=grid_h)
+pdf("./plots/4_1_2_beta_conv.pdf", width=7, height=7)
 
-par(mfrow=c(2,4), oma = c(0, 0, 3, 0))
+par(oma = c(0, 0, 3, 0))
+layout(matrix(c(0,1,1,0,2,3,4,5,6,7,8,9), 3, 4, byrow = TRUE))
 x_grid = 1:nrow(mean_draws)
-for (i in 2:ncol(X)){
+for (i in 1:ncol(X)){
   plot(x_grid,
        mean_draws[,i],
        type="l",
@@ -148,7 +147,6 @@ for (i in 2:ncol(X)){
        xlab="Iteration",
        col="lightgray",
        main=feature_labels[i])
-  lines(x_grid, rep(beta_means[i], length(x_grid)), col="black")
 }
 title("Convergence of beta during Metropolis Hastings", outer=TRUE, cex=1.5)
 
@@ -170,15 +168,18 @@ sample = c(
   MinBidShare = 0.5
 )
 
-lambda = exp(sample%*%t(beta_draws))
+lambda = exp(beta_draws%*%sample)
 
 pred_draws = rpois(10000, lambda)
+
 
 # Probability that the sample has 0 bidders
 prob = length(pred_draws[pred_draws == 0]) / length(pred_draws)
 
+pdf("./plots/4_1_3_pred_distr.pdf", width=5, height=4)
+
 # Plot the predictive distribution
-plot(hist(pred_draws, right=FALSE),
+plot(hist(pred_draws, right=FALSE, plot=FALSE),
      freq=FALSE,
      xaxt="n",
      xlab="Number of bidders",
@@ -189,3 +190,5 @@ axis(1,
      at=0:max(pred_draws), 
      labels=0:max(pred_draws)
   )
+
+dev.off()
