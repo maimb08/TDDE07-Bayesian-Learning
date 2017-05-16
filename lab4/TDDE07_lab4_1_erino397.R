@@ -89,7 +89,7 @@ post_cov = -solve(opt_results$hessian)
 # -----
 
 Sigma = post_cov
-c = .5
+c = .6
 
 n_draws = 20000
 
@@ -97,6 +97,7 @@ metropolisHastings = function(logPostFunc, theta, c, ...){
   theta_draws = matrix(0, n_draws, length(theta))
   # Set initial 
   theta_c = mvrnorm(n=1, theta, c*Sigma) 
+  prob_sum = 0
   for(i in 1:n_draws){
     # 1: Draw new proposal theta
     theta_p = mvrnorm(n=1, theta_c, c*Sigma)
@@ -104,12 +105,16 @@ metropolisHastings = function(logPostFunc, theta, c, ...){
     p_prev = logPostFunc(theta_c, ...)
     p_new = logPostFunc(theta_p, ...)
     acc_prob = min(c(1, exp(p_new - p_prev)))
+    prob_sum = prob_sum + acc_prob
     # 3: Set new value with prob = acc_prob
     if(rbern(n=1, p=acc_prob)==1){
       theta_c = theta_p
     }
     theta_draws[i,] = theta_c
   }
+  
+  print(paste('Avg. acc. prob. = ', round(prob_sum/n_draws, 2)))
+  
   return (theta_draws)
 }
 
@@ -164,26 +169,30 @@ sample = c(
   MinBidShare = 0.5
 )
 
-lambda = exp(beta_draws%*%sample)
+# Calculate lambda of pred. dens.
+lambda = exp(beta_means%*%sample)
 
-pred_draws = rpois(10000, lambda)
+# Calculate the predictive density of the sample
+beta_grid = 0:max(y)
+pred_dens = dpois(beta_grid, lambda)
+names(pred_dens) = beta_grid
+
+# Remove dependent variables that have prob. < .1%
+pred_dens = pred_dens[pred_dens > .001]
 
 # Probability that the sample has 0 bidders
-prob = length(pred_draws[pred_draws == 0]) / length(pred_draws)
+prob = pred_dens[1]
 
 pdf("./plots/4_1_3_pred_distr.pdf", width=5, height=4)
 
 # Plot the predictive distribution
-plot(hist(pred_draws, right=FALSE, plot=FALSE),
-     freq=FALSE,
-     xaxt="n",
-     xlab="Number of bidders",
-     ylab="Density",
-     main="Predictive distribution of sample")
+pred_plot = barplot(pred_dens,
+                    col="white",
+                    xaxt="n",
+                    xlab="Number of bidders",
+                    ylab="Probability",
+                    main="Predictive distribution of sample")
 
-axis(1, 
-     at=0:max(pred_draws), 
-     labels=0:max(pred_draws)
-  )
+axis(1, at=pred_plot, labels=names(pred_dens))
 
 dev.off()
