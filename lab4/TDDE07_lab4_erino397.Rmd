@@ -169,7 +169,7 @@ sample = c(
 # Calculate lambda of pred. dens.
 lambda = exp(beta_means%*%sample)
 
-# Calculate the predictive density of the sample
+# Determine the predictive density of the sample
 beta_grid = 0:max(y)
 pred_dens = dpois(beta_grid, lambda)
 names(pred_dens) = beta_grid
@@ -193,9 +193,17 @@ $\pagebreak$
 $\pagebreak$
 
 ### (d)
-After having determined the predictive distribution of the sample $\hat{x}$ as $p(\hat{y}|\lambda)\sim{Poisson(\lambda)}$, where $\lambda=e^{\hat{x}\beta}$ using the mean of the betas drawn during the simulation in (c), I got the distribution seen in Figure 2. In this figure I have removed the dependent variables that got a probability smaller than 0.1%. The probability that the sample has zero bidders by this distribution is $p(\hat{y}=0|\lambda)\approx0.36$.
+After having determined the predictive distribution of the sample $\hat{x}$ as $p(\hat{y}|\lambda)\sim{Poisson(\lambda)}$, where $\lambda=e^{\hat{x}\beta}$ using the mean of the betas drawn during the simulation in (c), I got the distribution seen in Figure 2. In this figure I have removed the dependent variables that got a probability less than 0.1%. The probabilities of the remaining candidates can also be seen in Table 4. The probability that the sample has zero bidders is $p(\hat{y}=0|\lambda)=$ `r round(prob, 3)`.
 
 ![Predictive distribution of sample](./plots/4_1_3_pred_distr.pdf)
+
+
+``` {r, echo=FALSE, eval=TRUE, results='asis', message=FALSE}
+options(xtable.comment=FALSE)
+pred_dens = t(as.matrix(pred_dens))
+rownames(pred_dens) = c("Probability")
+print(xtable(pred_dens, digits=rep(3, ncol(pred_dens)+1), caption='Probabilities of the different number of bidders for the sample'), type='latex')
+```
 
 $\pagebreak$
 
@@ -376,7 +384,7 @@ sample = c(
 # Calculate lambda of pred. dens.
 lambda = exp(beta_means%*%sample)
 
-# Calculate the predictive density of the sample
+# Determine the predictive density of the sample
 beta_grid = 0:max(y)
 pred_dens = dpois(beta_grid, lambda)
 names(pred_dens) = beta_grid
@@ -400,5 +408,6 @@ pred_plot = barplot(pred_dens,
 axis(1, at=pred_plot, labels=names(pred_dens))
 
 dev.off()
+
 
 ```

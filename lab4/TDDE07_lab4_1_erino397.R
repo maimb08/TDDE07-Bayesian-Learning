@@ -2,6 +2,7 @@ require(MASS)
 require(geoR)
 require(mvtnorm)
 require(LaplacesDemon)
+library(xtable)
 
 # -------
 #  Lab 4
@@ -172,7 +173,7 @@ sample = c(
 # Calculate lambda of pred. dens.
 lambda = exp(beta_means%*%sample)
 
-# Calculate the predictive density of the sample
+# Determine the predictive density of the sample
 beta_grid = 0:max(y)
 pred_dens = dpois(beta_grid, lambda)
 names(pred_dens) = beta_grid
