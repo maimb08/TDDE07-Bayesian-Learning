@@ -180,7 +180,7 @@ $\pagebreak$
 $\pagebreak$
 
 ### (d)
-After having determined the predictive distribution of the sample $\hat{y}$ as $p(\hat{y}|\lambda)\sim{Poisson(\lambda)}$, where $\lambda=e^{\hat{X}\beta}$ using the betas draws during the simulation in (c) and $\hat{X}$ as the sample to predict, I got the distribution seen in Figure 2. The probability that the sample has zero bidders by this distribution was $p(\hat{y}=0|\lambda)\approx0.36$.
+After having determined the predictive distribution of the sample $\hat{x}$ as $p(\hat{y}|\lambda)\sim{Poisson(\lambda)}$, where $\lambda=e^{\hat{x}\beta}$ using the betas drawn during the simulation in (c), I got the distribution seen in Figure 2. The probability that the sample has zero bidders by this distribution was $p(\hat{y}=0|\lambda)\approx0.36$.
 
 ![Predictive distribution of sample](./plots/4_1_3_pred_distr.pdf)
 
@@ -311,12 +311,8 @@ beta_draws = metropolisHastings(logPostPoiNorm, init_beta, c, X, y)
 # Calculate mean of batches of 2 draws to visualize the
 # auto correlation between sequential draws
 mean_draws = matrix(0, n_draws/2, n_features)
-for (i in 1:n_draws){
-  if(i%%2 == 0){
-    f = i-1
-    t = i
-    mean_draws[i/2,] = colMeans(beta_draws[f:t,])
-  }
+for (i in seq(2,n_draws,2)){
+  mean_draws[i/2,] = colMeans(beta_draws[c(i-1,i),])
 }
 
 # Avoid first 10% of the draws
@@ -362,7 +358,6 @@ sample = c(
 lambda = exp(beta_draws%*%sample)
 
 pred_draws = rpois(10000, lambda)
-
 
 # Probability that the sample has 0 bidders
 prob = length(pred_draws[pred_draws == 0]) / length(pred_draws)

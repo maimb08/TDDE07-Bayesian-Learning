@@ -120,12 +120,8 @@ beta_draws = metropolisHastings(logPostPoiNorm, init_beta, c, X, y)
 # Calculate mean of batches of 2 draws to visualize the
 # auto correlation between sequential draws
 mean_draws = matrix(0, n_draws/2, n_features)
-for (i in 1:n_draws){
-  if(i%%2 == 0){
-    f = i-1
-    t = i
-    mean_draws[i/2,] = colMeans(beta_draws[f:t,])
-  }
+for (i in seq(2,n_draws,2)){
+  mean_draws[i/2,] = colMeans(beta_draws[c(i-1,i),])
 }
 
 # Avoid first 10% of the draws
