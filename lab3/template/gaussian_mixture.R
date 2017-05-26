@@ -199,52 +199,83 @@ legend("topright",
        col=c("lightgray","black","gray"), 
        lwd = 2)
 
+# Traceplot (Convergence)
 
-# Plot the auto correlation (convergence) between draws of mu
-min_t = min(c(min(t1), min(t2)))
-max_t = max(c(max(t1), max(t2)))
-plot(t1, 
-     type="l", 
-     ylim=c(min_t, max_t), 
-     cex=.1,
-     lwd=2,
-     main=expression(
-       paste("Convergence of Gibbs Sampling ", "(", theta, ")", sep=" ")
-       ),
-     xlab="Batches of sequential draws",
-     ylab=expression(paste("Mean of seq. draws of ", theta, sep=" ")))
+# Theta conv.
+y_min = min(gibbs_thetas)
+y_max = max(gibbs_thetas)
+traceplot(mcmc(gibbs_thetas[,1]), 
+          ylim=c(y_min,y_max),
+          main="Gibbs sampling: Theta convergence")
+lines(mcmc(gibbs_thetas[,2]), col="gray")
 
-lines(t2, lwd=2, col="gray")
-
-legend("topright", 
-       box.lty = 1, 
+legend("topright",
+       box.lty = 1,
        legend = c(expression(paste(theta, " (1)", sep=" ")),
-                  expression(paste(theta, " (2)", sep=" "))), 
-       col=c("black","gray"), 
+                  expression(paste(theta, " (2)", sep=" "))),
+       col=c("black","gray"),
        lwd = 2)
+
+# Sigma conv.
+y_min = min(gibbs_sigmas)
+y_max = max(gibbs_sigmas)
+traceplot(mcmc(gibbs_sigmas[,1]), 
+          ylim=c(y_min,y_max),
+          main="Gibbs sampling: Sigma convergence")
+lines(mcmc(gibbs_sigmas[,2]), col="gray")
+
+legend("topright",
+       box.lty = 1,
+       legend = c(expression(paste(sigma, " (1)", sep=" ")),
+                  expression(paste(sigma, " (2)", sep=" "))),
+       col=c("black","gray"),
+       lwd = 2)
+
+# # Plot the auto correlation (convergence) between draws of mu
+# min_t = min(c(min(t1), min(t2)))
+# max_t = max(c(max(t1), max(t2)))
+# plot(t1, 
+#      type="l", 
+#      ylim=c(min_t, max_t), 
+#      cex=.1,
+#      lwd=2,
+#      main=expression(
+#        paste("Convergence of Gibbs Sampling ", "(", theta, ")", sep=" ")
+#        ),
+#      xlab="Batches of sequential draws",
+#      ylab=expression(paste("Mean of seq. draws of ", theta, sep=" ")))
+# 
+# lines(t2, lwd=2, col="gray")
+# 
+# legend("topright", 
+#        box.lty = 1, 
+#        legend = c(expression(paste(theta, " (1)", sep=" ")),
+#                   expression(paste(theta, " (2)", sep=" "))), 
+#        col=c("black","gray"), 
+#        lwd = 2)
 
 # Plot the auto correlation (convergence) between draws of sigma
-min_s = min(c(min(s1), min(s2)))
-max_s = max(c(max(s1), max(s2)))
-plot(s1, 
-     type="l", 
-     ylim=c(min_s, max_s), 
-     cex=.1,
-     lwd=2,
-     main=expression(
-       paste("Convergence of Gibbs Sampling ", "(", sigma^2, ")", sep=" ")
-       ),
-     xlab="Batches of sequential draws",
-     ylab=expression(paste("Mean of seq. draws of ", sigma^2, sep=" ")))
-
-lines(s2, lwd=2, col="gray")
-
-legend("topright", 
-       box.lty = 1, 
-       legend = c(expression(paste(sigma^2, " (1)", sep=" ")),
-                  expression(paste(sigma^2, " (2)", sep=" "))), 
-       col=c("black","gray"), 
-       lwd = 2)
+# min_s = min(c(min(s1), min(s2)))
+# max_s = max(c(max(s1), max(s2)))
+# plot(s1, 
+#      type="l", 
+#      ylim=c(min_s, max_s), 
+#      cex=.1,
+#      lwd=2,
+#      main=expression(
+#        paste("Convergence of Gibbs Sampling ", "(", sigma^2, ")", sep=" ")
+#        ),
+#      xlab="Batches of sequential draws",
+#      ylab=expression(paste("Mean of seq. draws of ", sigma^2, sep=" ")))
+# 
+# lines(s2, lwd=2, col="gray")
+# 
+# legend("topright", 
+#        box.lty = 1, 
+#        legend = c(expression(paste(sigma^2, " (1)", sep=" ")),
+#                   expression(paste(sigma^2, " (2)", sep=" "))), 
+#        col=c("black","gray"), 
+#        lwd = 2)
 
 
 dev.off()

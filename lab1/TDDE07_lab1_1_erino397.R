@@ -2,15 +2,14 @@ grid_w = 6
 grid_h = 5
 
 # Experiment Setup
-a = 2
-b = 2
-n = 20
+a0 = 2
+b0 = 2
 s = 14
-p = s / n
+f = 6
 
 # Posterior alpha and beta
-a_n = a + n * p
-b_n = b + n * (1 - p)
+a_n = a0 + s
+b_n = b0 + f
 
 # Theoretical mean and standard deviations
 mean = a_n / (a_n + b_n)
@@ -18,7 +17,8 @@ std_dev = sqrt(a_n*b_n / (((a_n + b_n)**2)*(a_n + b_n + 1)))
 
 # 1.1
 
-calc_mean_stddev <- function(n_draw){
+# Simulate from posterior beta(a0+s,b0+f)
+draw_post_mean_st <- function(n_draw){
   post_draws = rbeta(n_draw, a_n, b_n)
   m = mean(post_draws)
   s = sd(post_draws)
@@ -27,7 +27,7 @@ calc_mean_stddev <- function(n_draw){
 }
 
 # Calculate mean and variation for 2 to 10000 draws from posterior
-data = sapply(2:10000, calc_mean_stddev)
+data = sapply(2:10000, draw_post_mean_st)
 
 # Save plot for the convergence of mean and variation
 

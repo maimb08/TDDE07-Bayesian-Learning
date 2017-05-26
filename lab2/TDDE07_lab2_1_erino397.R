@@ -20,10 +20,11 @@ fit = lm(temp ~ time + I(time^2), data=df)
 summary(fit)
 
 
+# Set low v0 as we are unsure about the variance of the beta parameters
 mu0 = c(-10, 90, -80)
-covar0 = diag(c(.5, .5, .5))
-v0 = n - n_params
-sigma_sq0 = 1
+covar0 = diag(c(1, 1, 1))
+v0 = 10
+sigma_sq0 = 100
 
 # (b)
 
@@ -73,7 +74,7 @@ covar_n = X_X + covar0
 v_n = v0 + n
 sigma_sq_n = as.double((1/v_n)*(v0%*%sigma_sq0 + (t(y)%*%y + t(mu0)%*%covar0%*%mu0 - t(mu_n)%*%covar_n%*%mu_n)))
 
-pdf("plots/1_3_posterior_draws.pdf", width=grid_w, height=grid_h)
+# pdf("plots/1_3_posterior_draws.pdf", width=grid_w, height=grid_h)
 
 plot(t, 
      temp, 
@@ -92,7 +93,7 @@ beta_1s = c()
 beta_2s = c()
 beta_3s = c()
 
-n_draws = 1000
+n_draws = 5000
 for (iter in 1:n_draws) {
   sigma_sq = rinvchisq(n=1, df=v_n, scale=sigma_sq_n)
   beta = mvrnorm(n=1, mu=mu_n, Sigma=sigma_sq*ginv(covar_n))
@@ -136,11 +137,11 @@ legend("bottomright",
        fill = c("black", "blue", "red"),
        inset = 0.02)
 
-dev.off()
+# dev.off()
 
 # (d)
 
-pdf("plots/1_4_warm_days.pdf", width=grid_w, height=grid_h)
+# pdf("plots/1_4_warm_days.pdf", width=grid_w, height=grid_h)
 
 # Could also solve for time by derivation set to zero
 i = which.max(preds_mean)
@@ -161,7 +162,7 @@ plot(xGrid,
      cex.lab=.9, 
      cex.axis=.8)
 
-dev.off()
+# dev.off()
 
 # (e)
 
@@ -170,3 +171,6 @@ dev.off()
 mu0 = c(mu_n, 0, 0, 0, 0)
 covar0 = matrix(0, nrow=8, ncol=8)
 covar0[1:3, 1:3] = covar_n
+
+# Might need to set variance of other parameters to smaall value to 
+# allow for a posterior value for those parameters other than zero

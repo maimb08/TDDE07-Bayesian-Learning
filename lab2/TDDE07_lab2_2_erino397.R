@@ -10,7 +10,7 @@ grid_h = 4
 
 # Lab 2 - Assignment 2
 
-df = read.table("data/WomenWork.dat.txt", header=TRUE)
+df = read.table("data/WomenWork.dat", header=TRUE)
 
 # (a)
 
@@ -25,11 +25,11 @@ headers = colnames(df)
 n = dim(X)[1]
 n_params = dim(X)[2]
 
-tau_sq = 100 # tau = 10
+tau = 10
 
 # Initialize prior hyper parameters
-mu_prior <- as.vector(rep(0,n_params))
-sigma_prior = diag(tau_sq, n_params, n_params)
+mu0 = as.vector(rep(0,n_params))
+sigma_sq0 = diag(tau^2, n_params, n_params)
 
 # Calculate the log posterior
 LogPosteriorLogistic <- function(betas, y, X, mu, Sigma){
@@ -42,7 +42,7 @@ LogPosteriorLogistic <- function(betas, y, X, mu, Sigma){
   if (abs(log_likelihood) == Inf) log_likelihood = -20000;
   
   # Log prior
-  log_prior <- dmvnorm(betas, mu_prior, sigma_prior, log=TRUE);
+  log_prior <- dmvnorm(betas, mu0, sigma_sq0, log=TRUE);
   
   # Sum of log likelihood and log prior is log posterior
   return(log_likelihood + log_prior)
@@ -58,8 +58,8 @@ opt_results = optim(init_betas,
                     gr=NULL,
                     y,
                     X,
-                    mu_prior,
-                    sigma_prior,
+                    mu0,
+                    sigma_sq0,
                     method=c("BFGS"),
                     control=list(fnscale=-1),
                     hessian=TRUE)
@@ -104,7 +104,7 @@ sample = c(constant=1,
            n_big_child=1)
 
 y_draws = c()
-n_draws = 1000
+n_draws = 3000
 for (i in 1:n_draws){
   # Draw a beta
   beta_draw = as.vector(rmvnorm(n=1, mean=post_mode, sigma=post_cov))
@@ -118,20 +118,19 @@ for (i in 1:n_draws){
 
 outcomes = table(y_draws)
 n_working = outcomes[names(outcomes)==1]
-prob_working = n_working / length(y_draws)
+p = n_working / length(y_draws)
+
+probs = c(1-p, p) # Probabilities of wether working
+names(probs) = 100 * c((1-p), p) # Prob -> percentage
 
 pdf("plots/2_3_pred_distr.pdf", width=grid_w, height=grid_h)
 
-prob_density = density(y_draws)
-plot(prob_density, 
-     type="l", 
-     lwd=2, 
-     xlim=c(0,1), 
-     ylab="Density", 
-     xlab="Prediction (0 = not working, 1 = working)", 
-     main="Predictive distribution for sample",
-     cex.main=.9, 
-     cex.lab=.9, 
-     cex.axis=.8)
+prob = hist(y_draws, breaks=2, plot=FALSE)
+barplot(probs, 
+        col=c("lightgray", "white"),
+        legend=c("Not working", "Working"),
+       ylab="Probability", 
+       xlab="Working", 
+       main="Predictive distribution for sample")
 
 dev.off()

@@ -16,13 +16,14 @@ tau_sq = sum((log(y) - mean)^2) / n
 # X ~ chi(n)
 X_draws = rchisq(n_draws, n)
 # This is a draw from inv_chi(n, tausq)
-var = n * tau_sq / X_draws
-interval = seq(min(var), max(var), 0.001)
+sigma_sq = n * tau_sq / X_draws
+# sigma_sq = rinvchisq(n_draws, n, tau_sq)
+interval = seq(min(sigma_sq), max(sigma_sq), 0.001)
 invchisq = dinvchisq(interval, n, tau_sq)
 
 pdf("plots/2_1_chi_draws.pdf", width=grid_w, height=grid_h)
 # Plot draws against density
-hist(var, 
+hist(sigma_sq, 
      500, 
      border="gray", 
      prob=TRUE, 
@@ -36,7 +37,7 @@ dev.off()
 
 # 2.2
 
-z = sqrt(var / 2)
+z = sqrt(sigma_sq / 2)
 G = 2*pnorm(z)-1
 
 pdf("plots/2_2_gini_draws.pdf", width=grid_w, height=grid_h)

@@ -3,6 +3,7 @@ require(geoR)
 require(mvtnorm)
 require(LaplacesDemon)
 library(xtable)
+require(coda)
 
 # -------
 #  Lab 4
@@ -92,13 +93,14 @@ post_cov = -solve(opt_results$hessian)
 Sigma = post_cov
 c = .6
 
-n_draws = 20000
+n_draws = 5000
 
 metropolisHastings = function(logPostFunc, theta, c, ...){
   theta_draws = matrix(0, n_draws, length(theta))
   # Set initial 
   theta_c = mvrnorm(n=1, theta, c*Sigma) 
   prob_sum = 0
+  accepted = 0
   for(i in 1:n_draws){
     # 1: Draw new proposal theta
     theta_p = mvrnorm(n=1, theta_c, c*Sigma)
@@ -110,11 +112,13 @@ metropolisHastings = function(logPostFunc, theta, c, ...){
     # 3: Set new value with prob = acc_prob
     if(rbern(n=1, p=acc_prob)==1){
       theta_c = theta_p
+      accepted = accepted + 1
     }
     theta_draws[i,] = theta_c
   }
-  
-  print(paste('Avg. acc. prob. = ', round(prob_sum/n_draws, 2)))
+  prob_acc = accepted / n_draws
+  print(paste('Avg. acc. prob1. = ', round(prob_sum/n_draws, 2)))
+  print(paste('Avg. acc. prob2. = ', round(prob_acc, 2)))
   
   return (theta_draws)
 }
@@ -142,6 +146,11 @@ par(oma = c(0, 0, 3, 0))
 layout(matrix(c(0,1,1,0,2,3,4,5,6,7,8,9), 3, 4, byrow = TRUE))
 x_grid = 1:nrow(mean_draws)
 for (i in 1:ncol(X)){
+  # traceplot(mcmc(beta_draws[,i]),
+  #      ylab="",
+  #      xlab="Iteration",
+  #      col="lightgray",
+  #      main=feature_labels[i])
   plot(x_grid,
        mean_draws[,i],
        type="l",

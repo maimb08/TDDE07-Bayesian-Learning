@@ -12,12 +12,12 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## 1. Linear and polynomial regression
 ### (a)
-When choosing the parameters of the prior I reasoned that the intercept (temperature in the beginning of the year) would be around -10 degrees. The curve of the prior predictive line reaches its maximum slightly after 6 months and declines towards the end of the year.
+When choosing the parameters of the prior I reasoned that the intercept (temperature in the beginning of the year) would be around -10 degrees. The curve of the prior predictive line reaches its maximum slightly after 6 months and declines towards the end of the year. Since this estimation was fairly vague the posterior should not weigh too much towards the prior and therefore the variance is set to a large value with a small value for number of degrees of freedom.
 
 $\mu_0 = [-10, 90, -80]\\$
-$\Omega_0 = diag([.5, .5, .5])\\$
-$\nu_0 = n - n_{params} = 366 - 3 = 363\\$
-$\sigma_0^2 = 1\\$
+$\Omega_0 = diag([1, 1, 1])\\$
+$\nu_0 = 10\\$
+$\sigma_0^2 = 100\\$
 
 ### (b)
 I drew 10 beta samples and plotted the resulting curves. They can be seen plotted against the data in figure 1.
@@ -48,6 +48,7 @@ To set the new prior parameters in a way that would combat overfitting by the ne
 library(xtable)
 require(MASS)
 require(geoR)
+require(LaplacesDemon)
 
 df = read.table("data/TempLinkoping2016.txt", header=TRUE)
 
@@ -85,7 +86,6 @@ print(xtable(t(as.matrix(mu0)), caption='Prior mean'), type='latex')
 print(xtable(covar0, caption='Prior covariance'), type='latex')
 ```
 
-
 ## 2. Posterior approximation for classification with logistic regression
 ### (b)
 Computing the posterior mode $\tilde{\beta}$ and the observed Hessian evaluated at the posterior mode $J^{-1}(\tilde{\beta})$ I received values seen in table 3 and table 4 respectively.
@@ -96,9 +96,20 @@ require(geoR)
 library(mvtnorm)
 library(LaplacesDemon)
 
+
+grid_w = 5
+grid_h = 4
+
+
 # Lab 2 - Assignment 2
 
-df = read.table("data/WomenWork.dat.txt", header=TRUE)
+df = read.table("data/WomenWork.dat", header=TRUE)
+
+# (a)
+
+glmModel <- glm(Work ~ 0 + ., data = df,family = binomial)
+
+# (b)
 
 y = df[["Work"]]
 X = as.matrix(df[,2:9])
@@ -106,11 +117,11 @@ headers = colnames(df)
 n = dim(X)[1]
 n_params = dim(X)[2]
 
-tau_sq = 100 # tau = 10
+tau = 10
 
 # Initialize prior hyper parameters
-mu_prior <- as.vector(rep(0,n_params))
-sigma_prior = diag(tau_sq, n_params, n_params)
+mu0 = as.vector(rep(0,n_params))
+sigma_sq0 = diag(tau^2, n_params, n_params)
 
 # Calculate the log posterior
 LogPosteriorLogistic <- function(betas, y, X, mu, Sigma){
@@ -123,7 +134,7 @@ LogPosteriorLogistic <- function(betas, y, X, mu, Sigma){
   if (abs(log_likelihood) == Inf) log_likelihood = -20000;
   
   # Log prior
-  log_prior <- dmvnorm(betas, mu_prior, sigma_prior, log=TRUE);
+  log_prior <- dmvnorm(betas, mu0, sigma_sq0, log=TRUE);
   
   # Sum of log likelihood and log prior is log posterior
   return(log_likelihood + log_prior)
@@ -139,8 +150,8 @@ opt_results = optim(init_betas,
                     gr=NULL,
                     y,
                     X,
-                    mu_prior,
-                    sigma_prior,
+                    mu0,
+                    sigma_sq0,
                     method=c("BFGS"),
                     control=list(fnscale=-1),
                     hessian=TRUE)
@@ -149,10 +160,15 @@ opt_results = optim(init_betas,
 post_mode = opt_results$par
 # Posterior covariance (J^-1(beta hat))
 post_cov = -solve(opt_results$hessian)
+approx_post_std_dev = sqrt(diag(post_cov))
 
 
 print(xtable(t(matrix(post_mode)), caption="Posterior mode"), type='latex')
+
+
+
 print(xtable(post_cov, caption="Observed hessian evaluated at the posterior mode"),type='latex')
+
 
 ```
 
@@ -165,7 +181,9 @@ I used the posterior mode and the posterior covariance calculated in (b) to draw
 
 ![Predictive distribution](plots/2_3_pred_distr.pdf)
 
+
 $\pagebreak$
+
 
 ## Assignment 1
 ```{r, echo=TRUE, eval=FALSE}
@@ -242,7 +260,9 @@ beta_hat = ginv(X_X) %*% t(X) %*% y
 mu_n = ginv(X_X + covar0)%*%(X_X%*%beta_hat+covar0%*%mu0)
 covar_n = X_X + covar0
 v_n = v0 + n
-sigma_sq_n = as.double((1/v_n)*(v0%*%sigma_sq0 + (t(y)%*%y + t(mu0)%*%covar0%*%mu0 - t(mu_n)%*%covar_n%*%mu_n)))
+sigma_sq_n = as.double((1/v_n)*
+             (v0%*%sigma_sq0 + (t(y)%*%y + 
+            t(mu0)%*%covar0%*%mu0 - t(mu_n)%*%covar_n%*%mu_n)))
 
 pdf("plots/1_3_posterior_draws.pdf", width=grid_w, height=grid_h)
 
@@ -336,8 +356,8 @@ dev.off()
 
 # (e)
 
-# Chooses new mu0 and covar0 as the previous posterior hyper parameters and the additional
-# betas set to zero (to combat overfitting).
+# Chooses new mu0 and covar0 as the previous posterior hyper 
+# parameters and the additional betas set to zero (to combat overfitting).
 mu0 = c(mu_n, 0, 0, 0, 0)
 covar0 = matrix(0, nrow=8, ncol=8)
 covar0[1:3, 1:3] = covar_n

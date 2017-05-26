@@ -51,6 +51,8 @@ data_mean = mean(data)
 v0 = 1
 sigma_sq0 = 1 / v0
 
+v_n = v0 + n
+
 n_draws = 4000
 
 # Initial value for sigma
@@ -60,13 +62,25 @@ sigma_sq = rinvchisq(n=1, v0, sigma_sq0)
 gibbs_draws = matrix(0,n_draws,2)
 for(i in 1:n_draws){
   mu = rnorm(n=1, mean=data_mean, sd=sqrt(sigma_sq/n))
-  sigma_sq = rinvchisq(n=1, v0 + n, (v0*sigma_sq0 + sum((data - mu)^2))/(n + v0)) 
+  sigma_sq = rinvchisq(n=1, v_n, (v0*sigma_sq0 + sum((data - mu)^2))/(n + v0)) 
   gibbs_draws[i,] = c(mu, sigma_sq)
 }
 
-
 mean_draws = gibbs_draws[,1]
 var_draws = gibbs_draws[,2]
+
+# 
+# y_min = min(mean_draws)
+# y_max = max(mean_draws)
+# traceplot(mcmc(mean_draws), 
+#           ylim=c(y_min,y_max),
+#           main="Gibbs sampling: theta convergence")
+# 
+# y_min = min(var_draws)
+# y_max = max(var_draws)
+# traceplot(mcmc(var_draws), 
+#           ylim=c(y_min,y_max),
+#           main="Gibbs sampling: theta convergence")
 
 
 # Calculate mean of batches of 2 draws to visualize the

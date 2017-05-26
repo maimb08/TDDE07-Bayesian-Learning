@@ -42,7 +42,7 @@ $\pagebreak$
 The implementation can be found in Appendix C.
 
 ### (c)
-A comparison between the beta parameters draws drawn during Gibbs sampling (represented as histograms) and the normal approximation of the distributions of those parameters are plotted in Figure 5. In these plots we see that the normal does not seem do do a good job approximating the distribution of the parameters. The beta parameters are according to the values drawn during Gibbs sampling distributed closer to zero than the normal approximation of the corresponding parameter shows.
+A comparison between the beta parameters draws drawn during Gibbs sampling (represented as histograms) and the normal approximation of the distributions of those parameters are plotted in Figure 5. In these plots we see that beta parameters drawn during Gibbs sampling closely resembles the optim results. 
 ![Comparison between the normal approximation of the probability distribution for each parameter and the histogram of the draws for those parameters during Gibbs sampling done in 1a](plots/3_2_3_norm_gibbs_comp.pdf)
 $\pagebreak$
 
@@ -243,9 +243,9 @@ library(LaplacesDemon)
 grid_w = 6
 grid_h = 5
 
-# ----------------------
-#  Lab 3 - Assignment 2
-# ----------------------
+# -------
+#  Lab 3
+# -------
 
 
 # Read data
@@ -253,8 +253,8 @@ data <- read.table("./data/WomenWork.dat", header = TRUE)
 
 feature_labels = colnames(data)
 
-y <- as.vector(data$Work)
-X <- as.matrix(data[, 2:ncol(data)])
+y = as.vector(data$Work)
+X = as.matrix(data[, 2:ncol(data)])
 
 # Data spec.
 n_features = ncol(X)
@@ -271,6 +271,9 @@ tau = 10
 # Beta prior parameters
 mu0 = rep(0, n_features)
 covar0 = diag(tau^2, n_features)
+Omega0 = solve(covar0)                # MV: Ni har blandat ihop Omega0 (prior precision) som är med i mina slides
+# med covar0 som är prior covariance matrix.
+# Omega0 = inv(covar0)
 
 draw_beta = function(y) {
   
@@ -280,11 +283,11 @@ draw_beta = function(y) {
   beta_hat = ginv(X_X) %*% t(X) %*% y
   
   # Posterior parameters
-  mu_n = ginv(X_X + covar0)%*%(X_X%*%beta_hat+covar0%*%mu0)
-  covar_n = X_X + covar0
+  mu_n = ginv(X_X + Omega0)%*%(X_X%*%beta_hat+Omega0%*%mu0)
+  Omega_n = X_X + Omega0
   
   # Assuming sigma_sq = 1
-  b_draw = rmvnorm(1, mean=mu_n, sigma=ginv(covar_n))
+  b_draw = rmvnorm(1, mean=mu_n, sigma=ginv(Omega_n))
   
   return(b_draw)
 }
@@ -382,7 +385,7 @@ for (i in 1:n_features) {
   
   # Get the normal approximation for beta_i via optim.
   mean = post_mode[i]
-  std_dev = sqrt(post_cov[i,i]/n_features)
+  std_dev = sqrt(post_cov[i,i])   # MV: Här hade ni: std_dev = sqrt(post_cov[i,i]/n_features)  
   norm_approx = dnorm(x=beta_grid, mean=mean, sd=std_dev)
   
   # Find x- and y-limits for plot

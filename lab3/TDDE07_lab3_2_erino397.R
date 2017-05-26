@@ -34,6 +34,9 @@ tau = 10
 # Beta prior parameters
 mu0 = rep(0, n_features)
 covar0 = diag(tau^2, n_features)
+Omega0 = solve(covar0)                # MV: Ni har blandat ihop Omega0 (prior precision) som är med i mina slides
+# med covar0 som är prior covariance matrix.
+# Omega0 = inv(covar0)
 
 draw_beta = function(y) {
   
@@ -43,11 +46,11 @@ draw_beta = function(y) {
   beta_hat = ginv(X_X) %*% t(X) %*% y
   
   # Posterior parameters
-  mu_n = ginv(X_X + covar0)%*%(X_X%*%beta_hat+covar0%*%mu0)
-  covar_n = X_X + covar0
+  mu_n = ginv(X_X + Omega0)%*%(X_X%*%beta_hat+Omega0%*%mu0)
+  Omega_n = X_X + Omega0
   
   # Assuming sigma_sq = 1
-  b_draw = rmvnorm(1, mean=mu_n, sigma=ginv(covar_n))
+  b_draw = rmvnorm(1, mean=mu_n, sigma=ginv(Omega_n))
   
   return(b_draw)
 }
@@ -145,7 +148,7 @@ for (i in 1:n_features) {
   
   # Get the normal approximation for beta_i via optim.
   mean = post_mode[i]
-  std_dev = sqrt(post_cov[i,i]/n_features)
+  std_dev = sqrt(post_cov[i,i])   # MV: Här hade ni: std_dev = sqrt(post_cov[i,i]/n_features)  
   norm_approx = dnorm(x=beta_grid, mean=mean, sd=std_dev)
   
   # Find x- and y-limits for plot
